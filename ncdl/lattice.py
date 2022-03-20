@@ -13,22 +13,32 @@ class LatticeTensor:
     """
     A LatticeTensor container abstracts the idea of storing information on a lattice.
     """
-    def __init__(self, lt: "LatticeTensor" = None):
+    def __init__(self, lt: "LatticeTensor" = None, alt_cosets: torch.Tensor = None):
+
+        # If we have an alternative set of cosets we want to construct
+        # ensure that they have the same shape
+        if alt_cosets is not None and lt is not None:
+            assert all([a.size() == b.size() for (a, b) in zip(lt._cosets, alt_cosets)])
+
         if lt is not None:
             print("copy?")
-        raise NotImplementedError()
+
+        self._cosets = []
+        self._coset_offsets = []
+
+        raise NotImplementedError("Not finished")
 
     def detach(self):
-        raise NotImplementedError()
+        return LatticeTensor(self, alt_cosets=[_.detach() for _ in self._cosets])
 
     def clone(self):
-        raise NotImplementedError()
+        return LatticeTensor(self, alt_cosets=[_.clone() for _ in self._cosets])
 
     def to(self, device):
-        raise NotImplementedError()
+        return LatticeTensor(self, alt_cosets=[_.to(device) for _ in self._cosets])
 
     def is_tensor(self):
-        raise NotImplementedError()
+        return len(self._cosets) == 1
 
     def __cmp__(self, other):
         raise NotImplementedError()
