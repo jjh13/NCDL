@@ -28,16 +28,16 @@ class LatticeTensor:
 
         raise NotImplementedError("Not finished")
 
-    def detach(self):
+    def detach(self) -> "LatticeTensor":
         return LatticeTensor(self, alt_cosets=[_.detach() for _ in self._cosets])
 
-    def clone(self):
+    def clone(self) -> "LatticeTensor":
         return LatticeTensor(self, alt_cosets=[_.clone() for _ in self._cosets])
 
-    def to(self, device):
+    def to(self, device) -> "LatticeTensor":
         return LatticeTensor(self, alt_cosets=[_.to(device) for _ in self._cosets])
 
-    def is_tensor(self):
+    def is_tensor(self) -> bool:
         return len(self._cosets) == 1
 
     def __cmp__(self, other):
@@ -66,7 +66,7 @@ class Lattice:
     def __init__(self,
                  input_lattice: Union[List, str],
                  scale: Union[torch.FloatTensor, None] = None,
-                 tensor_backend: torch.Tensor = torch.FloatTensor):
+                 tensor_backend: torch.Tensor = torch.Tensor):
         coset = input_lattice
         if isinstance(input_lattice, str) and scale is None:
             coset, scale = get_coset_vector_from_name(input_lattice)
@@ -86,3 +86,31 @@ class Lattice:
 
     def __call__(self, *args):
         raise NotImplementedError()
+
+
+class HalfLattice(Lattice):
+    def __init__(self,
+                 input_lattice: Union[List, str],
+                 scale: Union[torch.FloatTensor, None] = None):
+        super(HalfLattice, self).__init__(input_lattice, scale, torch.HalfTensor)
+
+
+class FloatLattice(Lattice):
+    def __init__(self,
+                 input_lattice: Union[List, str],
+                 scale: Union[torch.FloatTensor, None] = None):
+        super(FloatLattice, self).__init__(input_lattice, scale, torch.FloatTensor)
+
+
+class DoubleLattice(Lattice):
+    def __init__(self,
+                 input_lattice: Union[List, str],
+                 scale: Union[torch.FloatTensor, None] = None):
+        super(DoubleLattice, self).__init__(input_lattice, scale, torch.DoubleTensor)
+
+
+class IntLattice(Lattice):
+    def __init__(self,
+                 input_lattice: Union[List, str],
+                 scale: Union[torch.FloatTensor, None] = None):
+        super(IntLattice, self).__init__(input_lattice, scale, torch.IntTensor)
