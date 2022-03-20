@@ -11,7 +11,7 @@ import torch
 
 class LatticeTensor:
     """
-    A LatticeTensor container abstracts the idea of storing information on a lattice
+    A LatticeTensor container abstracts the idea of storing information on a lattice.
     """
     def __init__(self, lt: "LatticeTensor" = None):
         if lt is not None:
@@ -33,7 +33,15 @@ class LatticeTensor:
     def __cmp__(self, other):
         raise NotImplementedError()
 
-    def __index__(self):
+    def __getitem__(self):
+        """ this is going to be a doozy --- the syntax I'm thinking right now is either
+        lt[coset(int), batch slice, rectangular region on the coset] -> tensor
+          or
+        lt[batch slice, rectangular region in space of integers] -> LatticeTensor
+        """
+        raise NotImplementedError()
+
+    def coset_vector(self, coset: int) -> torch.IntTensor:
         raise NotImplementedError()
 
 
@@ -45,7 +53,10 @@ class Lattice:
 
 
     """
-    def __init__(self, input_lattice: Union[List, str], scale: Union[torch.FloatTensor, None] = None):
+    def __init__(self,
+                 input_lattice: Union[List, str],
+                 scale: Union[torch.FloatTensor, None] = None,
+                 tensor_backend: torch.Tensor = torch.FloatTensor):
         coset = input_lattice
         if isinstance(input_lattice, str) and scale is None:
             coset, scale = get_coset_vector_from_name(input_lattice)
@@ -57,6 +68,7 @@ class Lattice:
                              f"pass 'scale' as matrix (torch.IntTensor) that describes the scale of the "
                              f"cosets.")
 
+        self.tensor = tensor_backend
         raise NotImplementedError()
 
     def __cmp__(self, other):
