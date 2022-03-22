@@ -65,8 +65,14 @@ class Lattice:
     """
     def __init__(self,
                  input_lattice: Union[List, str],
-                 scale: Union[torch.FloatTensor, None] = None,
+                 scale: Union[torch.IntTensor, None] = None,
                  tensor_backend: torch.Tensor = torch.Tensor):
+        """
+
+        :param input_lattice:
+        :param scale: Matrix diagonal
+        :param tensor_backend:
+        """
         coset = input_lattice
         if isinstance(input_lattice, str) and scale is None:
             coset, scale = get_coset_vector_from_name(input_lattice)
@@ -78,8 +84,39 @@ class Lattice:
                              f"pass 'scale' as matrix (torch.IntTensor) that describes the scale of the "
                              f"cosets.")
 
+        if len(coset) == 0:
+            raise ValueError(f"The input 'coset' should be a non-empty list of IntTensors")
+
+        if any([not isinstance(_, torch.IntTensor) for _ in coset]):
+            raise ValueError(f"The input 'coset' should be a non-empty list of IntTensors")
+
+        if any([_.size() != coset[0].size() for _ in coset]):
+            raise ValueError(f"The input 'coset' should be a non-empty list of 1-D IntTensors with the same size")
+
         self.tensor = tensor_backend
-        raise NotImplementedError()
+        self._dimension = coset[0].shape[0]
+        self._coset_scale = scale
+        with torch.no_grad():
+            canonical_offsets = [_ % scale for _ in coset]
+
+        self._coset_vectors = canonical_offsets
+
+    @property
+    def dimension(self) -> int:
+        return self._dimension
+
+    @property
+    def coset_scale(self) -> torch.IntTensor:
+        return self._coset_scale.detach()
+
+    @property
+    def coset_count(self) -> int:
+        return len(self._coset_vectors)
+
+    def coset_offset(self, idx):
+        if 0 > idx <= self.coset_count:
+            raise ValueError('Invalid coset offset index!')
+        return self._coset_vectors[idx].detach()
 
     def __cmp__(self, other):
         raise NotImplementedError()
