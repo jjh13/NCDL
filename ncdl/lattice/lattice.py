@@ -167,7 +167,6 @@ class LatticeTensor:
 
             a = [_ - c_a for _ in self._coset_offsets]
             b = [_ - c_b for _ in other._coset_offsets]
-            print('a,b', a, b)
 
             corresp = [0] * len(a)
             found = 0
