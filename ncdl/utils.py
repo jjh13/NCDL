@@ -61,3 +61,28 @@ def get_coset_vector_from_name(name: str) -> Tuple[List[torch.IntTensor], torch.
         ], torch.tensor([2., 2.])
 
     raise ValueError(f"Lattice '{name}' is not valid?")
+
+
+def hnf_transform(lattice):
+    pass
+
+def get_matrix_from_mod_basis(lattice_vectors):
+    # arrange lattice vectors then get HNF
+    pass
+
+def get_mod_basis(lattice):
+    pass
+    # # put lattice in HNF
+    # lattice = hnf_transform(lattice)
+    #
+    # # do a stupid trick to extract the
+    #
+    # return D, [v1,vk]
+
+# @torch.no_grad
+# def get_subsampled_mod_basis(lattice_tensor, S):
+#     L = get_matrix_from_mod_basis(lattice_tensor)
+#     D = L @ S
+#     D = hnf_transform(L)
+#
+#     D, v_list = get_mod_basis(D)

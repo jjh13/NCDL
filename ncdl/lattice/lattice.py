@@ -4,8 +4,11 @@ in 2021. Most of the ideas in that work we're not well tested, and some of the i
 was a little sloppy (this is all on me).
 
 """
+
 from ncdl.utils import get_coset_vector_from_name, interval_differences
 from typing import List, Tuple, Union
+from collections.abc import Iterable
+import numpy as np
 import torch
 
 
@@ -38,6 +41,7 @@ class LatticeTensor:
             self.parent = parent
 
         coset_offsets = parent._coset_vectors[:] if alt_offsets is None else alt_offsets
+        coset_offsets = [np.array(_, dtype='int') for _ in coset_offsets]
         if alt_cosets is not None:
             cosets = alt_cosets
         elif lt is not None:
@@ -46,6 +50,7 @@ class LatticeTensor:
             raise ValueError(f"No lattice data for constructor!")
 
         self._coset_offsets, self._cosets = self.parent._coset_sort(coset_offsets, cosets)
+        self._coset_offsets = [torch.IntTensor([int(e) for e in csv]) for csv in self._coset_offsets]
         self._validate()
 
     def _validate(self):
@@ -59,6 +64,9 @@ class LatticeTensor:
 
         if any([len(c.shape) != self.parent.dimension + 2 for c in self._cosets]):
             raise ValueError(f"Invalid tensor dimension input")
+
+        if len(self._cosets) == 1:
+            return True
 
         # check that the coset overlap correctly
         for axis in range(self.parent.dimension):
@@ -79,8 +87,27 @@ class LatticeTensor:
     def clone(self) -> "LatticeTensor":
         return LatticeTensor(self, alt_cosets=[_.clone() for _ in self._cosets])
 
+    def shift_constants(self, i, j, deconv=False):
+        w = -1 if deconv else 1
+        kappa_shift = np.array(self.coset_vectors[self.parent.kappa(i, j)])
+        shift = w*(self._coset_offsets[j] - self._coset_offsets[i]) - kappa_shift
+        shift = (1/self.parent.coset_scale) * shift
+        return np.array(shift.round()).astype('int')
+
+    def delta(self, i):
+        delta = np.array(self._coset_offsets[i], dtype='int')
+        delta = delta - (delta % np.array(self.parent.coset_scale, dtype='int'))
+        delta = (1/self.parent.coset_scale) * delta
+        return np.array(delta.round(), dtype='int')
+
+    @property
+    def device(self):
+        return self.coset(0).device
+
     def to(self, device) -> "LatticeTensor":
-        return LatticeTensor(self, alt_cosets=[_.to(device) for _ in self._cosets])
+        return LatticeTensor(self,
+                             alt_cosets=[_.to(device) for _ in self._cosets],
+                             alt_offsets=self._coset_offsets)
 
     def is_tensor(self) -> bool:
         return len(self._cosets) == 1
@@ -95,28 +122,52 @@ class LatticeTensor:
 
     def lattice_bounds(self):
         """
-        Returns the
+        Returns the inclusive boundary of the lattice tensor.
+
+        This is perhaps a little complicated, so I'll clarify this with an example
+          |o   o   o
+         x|  x   x
+          |o   o   o
+         x|  x   x
+          |o---o---o
+         x   x   x
+
+        The example above should be (0, batch_size-1)
+
         """
         batch_size = self._cosets[0].shape[0]
         channel_size = self._cosets[0].shape[1]
         mins = [0] * self.parent.dimension
         maxs = None
-        for idx, c in enumerate(self._cosets):
-            mm = [int(x * y.item() + z.item()) for x, y, z in
-                  zip(c.shape[2:], self.parent.coset_scale, self._coset_offsets[idx])]
-            if maxs is None:
-                maxs = mm
-            else:
-                maxs = [max(a, _) for a, _ in zip(mm, maxs)]
-            mm = [int(z.item()) for z in self._coset_offsets[idx]]
-            mins = [min(a, _) for a, _ in zip(mm, mins)]
-        return (0, batch_size - 1), (0, channel_size - 1), *list(zip(mins, maxs))
+        with torch.no_grad():
+            for idx, c in enumerate(self._cosets):
+                # Get the raw array dimension, then scale it by the coset scale
+                dimensions = [(array_dim-1) * dim_scale.item() for array_dim, dim_scale in zip(c.shape[2:], self.parent.coset_scale)]
+
+                # Offset that by the coset offest
+                dimensions = [array_dim + dim_offset.item() for array_dim, dim_offset in zip(dimensions, self._coset_offsets[idx])]
+
+                if maxs is None:
+                    maxs = dimensions
+                else:
+                    maxs = [int(max(a, _)) for a, _ in zip(dimensions, maxs)]
+
+                mm = [int(z.item()) for z in self._coset_offsets[idx]]
+                mins = [int(min(a, _)) for a, _ in zip(mm, mins)]
+        return (0, batch_size-1), (0, channel_size-1), *list(zip(mins, maxs))
+
+    def on_lattice(self, p : torch.IntTensor):
+        b, c, *dim = self.lattice_bounds()
+        if self.parent.coset_index(p) is not None:
+            if all([d[0] <= _ <= d[1] for (_, d) in zip(p, dim)]):
+                return True
+        return False
 
     def __getitem__(self, slices) -> "LatticeTensor":
         """
         lt[batch slice, rectangular region in space of integers] -> LatticeTensor
         """
-        print(slices)
+        raise NotImplementedError
         batch_slice = slices[0]
         channel_slice = slices[1]
 
@@ -148,8 +199,6 @@ class LatticeTensor:
             start_pt += [start]
             end_pt += [stop]
 
-        print(start_pt)
-        print(end_pt)
         if self.parent.coset_index(start_pt) is not None:
             return 0
         else:
@@ -186,6 +235,7 @@ class LatticeTensor:
         keys = {}
         with torch.no_grad():
             for i, (offset, coset_a) in enumerate(zip(self._coset_offsets, self._cosets)):
+                offset = tuple([int(_) for _ in offset])
                 keys[tuple(offset)] = coset_a + other._cosets[correspondence[i]]
         return self.parent(keys)
 
@@ -194,6 +244,7 @@ class LatticeTensor:
         keys = {}
         with torch.no_grad():
             for i, (offset, coset_a) in enumerate(zip(self._coset_offsets, self._cosets)):
+                offset = tuple([int(_) for _ in offset])
                 keys[tuple(offset)] = coset_a - other._cosets[correspondence[i]]
         return self.parent(keys)
 
@@ -202,14 +253,25 @@ class LatticeTensor:
         keys = {}
         with torch.no_grad():
             for i, (offset, coset_a) in enumerate(zip(self._coset_offsets, self._cosets)):
+                offset = tuple([int(_) for _ in offset])
                 keys[tuple(offset)] = coset_a * other._cosets[correspondence[i]]
         return self.parent(keys)
+
+    def raw_coset_point_info(self, lattice_site):
+        coset = self.parent.coset_index(lattice_site)
+        if coset is None:
+            return None
+        return coset, (lattice_site - self.coset_vector(coset))//self.parent.coset_scale
 
     @staticmethod
     def _project_axis_bounds(coset_vector, coset_scale, element_count, axis):
         start = coset_vector[axis]
         end = coset_scale[axis] * element_count + coset_vector[axis]
         return start, end
+
+    @property
+    def coset_vectors(self):
+        return  self._coset_offsets[:]
 
     def coset_vector(self, coset: int) -> torch.IntTensor:
         return self._coset_offsets[coset]
@@ -220,8 +282,6 @@ class Lattice:
     The general "LatticeTensor" factory. Basically, this holds all the important information about the
     point structure of the Lattice. LatticeTensors are instances of multi-dimensional sequences, but they
     store values only within a bounded region (and on an integer lattice).
-
-
     """
 
     def __init__(self,
@@ -229,13 +289,18 @@ class Lattice:
                  scale: Union[torch.IntTensor, None] = None,
                  tensor_backend: torch._tensor = torch.Tensor):
         """
+        Instantiate the LatticeTensor factory.
 
-        :param input_lattice:
-        :param scale: Matrix diagonal
-        :param tensor_backend:
+        :param input_lattice: Either a lattice name (i.e. quincunx, qc, bcc etc..) or a list of coset vectors.
+        :param scale: If input lattice is a list of coset vectors, then this should be an n-dimensional integer vector
+                      specifying the scale of each coset.
+        :param tensor_backend: The type of tensor that backs this tensor created from this factory. This will mostly be
+                                torch.Tensor, but can be any torch._tensor type.
         """
         coset = input_lattice
-        if isinstance(input_lattice, str) and scale is None:
+        if isinstance(input_lattice, str):
+            if scale is not None:
+                print("Warning: Scale was provided to a pre-configured lattice, it will be ignored.")
             coset, scale = get_coset_vector_from_name(input_lattice)
 
         if not isinstance(coset, list):
@@ -248,6 +313,7 @@ class Lattice:
         if len(coset) == 0:
             raise ValueError(f"The input 'coset' should be a non-empty list of IntTensors")
 
+        # TODO: Change this to np.array
         if any([not isinstance(_, torch.IntTensor) for _ in coset]):
             raise ValueError(f"The input 'coset' should be a non-empty list of IntTensors")
 
@@ -260,10 +326,14 @@ class Lattice:
 
         with torch.no_grad():
             canonical_offsets = [_ % scale.abs() for _ in coset]
-            print(canonical_offsets)
+            # TODO: change to np.array(, dtype='int')
             self._coset_vectors = sorted(canonical_offsets,
                                          key=lambda x: sum([abs(_.item()) for _ in x[:]])
             )
+
+    @property
+    def coset_vectors(self):
+        return self._coset_vectors[:]
 
     @property
     def dimension(self) -> int:
@@ -278,23 +348,34 @@ class Lattice:
         return len(self._coset_vectors)
 
     def coset_index(self, pt: Union[Tuple[int], List[int], torch.IntTensor]) -> Union[int, None]:
+        return self.cartesian_index(pt)[0]
+
+    def cartesian_index(self, pt: Union[Tuple[int], List[int], torch.IntTensor]):
+        # TODO: change to np.array(, dtype='int')
         if type(pt) == tuple or type(pt) == list:
-            pt = torch.IntTensor(pt)
+            pt = torch.IntTensor([int(_) for _ in pt])
         for idx, c in enumerate(self._coset_vectors):
             x = (1 / self._coset_scale) * (pt - c)
             if all([(_.round() - _).abs() < 2 * torch.finfo().eps for _ in x]):
-                return idx
-        return None
+                return idx, x
+        return None, None
 
     def coset_offset(self, idx):
+        # TODO: change to np.array(, dtype='int')
         if 0 > idx <= self.coset_count:
             raise ValueError('Invalid coset offset index!')
         return self._coset_vectors[idx].detach()
 
+    def cartesian_to_lattice(self, pt, coset_index):
+
+        return self._coset_scale * torch.tensor(pt) + self._coset_vectors[coset_index]
+
     def __cmp__(self, other):
+        # TODO: Check if tensors implement a cmp method, then implement this
         raise NotImplementedError()
 
     def _validate_coset_vectors(self, vectors):
+        #
         pass
 
     def _coset_sort(self, vectors, cosets=None):
@@ -329,6 +410,9 @@ class Lattice:
 
         else:
             cosets = args
+        device = cosets[0].device
+        if any([device != _.device for _ in cosets]):
+            raise ValueError("Not all cosets on same device")
 
         if len(cosets) != self.coset_count:
             raise ValueError(f"Invalid number of input tenors, expected {self.coset_count}, but got {len(cosets)}")
@@ -337,6 +421,10 @@ class Lattice:
             raise ValueError(f"All input tensors must be of type {self.tensor}")
 
         return LatticeTensor(None, cosets, parent=self, alt_offsets=vectors)
+
+    def kappa(self, i, j, additive=False) -> bool:
+        r = tuple([a-b if not additive else a+b for a,b in zip(self._coset_vectors[j], self._coset_vectors[i])])
+        return self.coset_index(r)
 
 
 class HalfLattice(Lattice):
