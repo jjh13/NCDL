@@ -1,8 +1,18 @@
-from collections.abc import Iterable
-from typing import List, Tuple, Optional
-from math import prod
-from ncdl.lattice import Lattice, LatticeTensor
+"""
+stencil.py
+
+This file contains the astraction for "stencils" which describe the explicit geometry of filters/neighborhoods.
+This is useful for any algorithm that operates over a fixed neighborhood of lattice points.
+"""
 import torch
+import numpy as np
+
+from math import prod
+from collections.abc import Iterable
+from typing import List, Tuple, Optional, Dict
+
+from ncdl.lattice import Lattice, LatticeTensor
+from ncdl.nn.functional.pad import pad, padding_for_stencil
 
 
 class Stencil:
@@ -27,7 +37,7 @@ class Stencil:
             raise TypeError(f"Stencil must be a list of tuples. Each tuple in the list must have "
                             f"dimension {lattice.dimension}")
 
-
+        self._center = center
         self.lattice = lattice
         self.stencil = [_[:] for _ in stencil]
         self._validate_stencil()
@@ -37,6 +47,12 @@ class Stencil:
         self._cache_squareness = {}
 
     def _validate_stencil(self):
+        """
+        Validates that the stencil is correct
+
+        TODO: Validate and/or complain
+
+        """
         coset_mins = [[0 for _ in range(self.lattice.dimension)] for __ in range(self.lattice.coset_count)]
 
         for _ in self.stencil:
@@ -45,8 +61,8 @@ class Stencil:
             if coset_index is None:
                 raise ValueError(f"Stencil point {_} does not belong to the lattice")
 
-            if any([(_ < 0) if coset_index == 0 else (_ < -1) for _ in cartesian_pt]):
-                raise ValueError(f"Stencil point {_} is outside the canonical region defined by the lattice")
+            if any([(_ < 0) for _ in cartesian_pt]):
+                raise ValueError(f"Stencil point {_} is negative!")
 
             # Take the min for the offset vectory
             for idx, value in enumerate(coset_mins[coset_index]):
@@ -57,37 +73,118 @@ class Stencil:
             self.lattice.cartesian_to_lattice(pt, coset_index) for coset_index, pt in enumerate(coset_mins)
         ]
 
-    def delta_shift(self, lt: LatticeTensor, coset_i, coset_j):
+    def delta_shift(self,
+                    lt: LatticeTensor,
+                    coset_i: int,
+                    coset_j: int) -> Tuple[int]:
+        """
+        Returns the appropriate \\delta shift from the paper. This value shifts the cosets of the filter so as to be
+        appropriate/compatible with the coset we're convolving with.
+
+        :param lt: An input LatticeTensor
+        :param coset_i: Coset index of the output lattice
+        :param coset_j: Coset index of the filter
+
+        :returns: a tuple/list of ints rep
+        """
+        if lt.parent != self.lattice:
+            raise ValueError()
+
         # This is from the paper
         kappa = self.lattice.kappa(coset_i, coset_j, additive=True)
         ds = self.offset_vectors[coset_j] + lt.coset_vectors[coset_i]
         ds = ds - lt.coset_vectors[kappa]
         scale = 1. / self.lattice.coset_scale
-        return [-int(_.item()) for _ in ds * scale]
 
-    def pad_lattice_tensor(self, lt, mode='zero', value=0.0):
-        pass
+        mins, _ = self.stencil_boundaries(coset_j, canonical=True, cartesian=True)
+        shift = tuple([-int(_.item()) for _ in ds * scale])
+        shift = tuple([_ - m for _, m in zip(shift, mins)])
 
-    def padding_for_lattice_tensor(self, lt):
-        pass
+        # TODO: If the coset is shifted, then this should be shifted, too
+        return shift
 
-    def weight_index(self, coset):
-        import numpy as np
+    def pad_lattice_tensor(self,
+                           lt: LatticeTensor,
+                           mode: str='zero',
+                           value: float=0.0) -> LatticeTensor:
+        """
+        Utility method to appropriately pad a lattice tensor.
 
-        coset_stencil = self.coset_decompose(output_cartesian=True)[coset]
-        _, boundaries = self.stencil_boundaries(coset, canonical=True, cartesian=True)
+        :param lt: Input lattice tensor to pad
+        :param mode: Padding mode, see torch.nn.functional.pad for details
+        :param mode: Padding value, see torch.nn.functional.pad for details
+
+        :returns: Returns a padded lattice tensor
+        """
+        padding = self.padding_for_lattice_tensor(lt)
+        return pad(lt, padding, mode, value)
+
+    def padding_for_lattice_tensor(self, lt: LatticeTensor) -> List[int]:
+        """
+        Utility method to calculate lattice tensor padding.
+
+        :param lt: Input lattice tensor to calculate padding for
+
+        :returns: Returns a list of integers that describes the padding for ncdl.nn.functional.pad.
+        """
+        return padding_for_stencil(lt, self.stencil, self._center)
+
+    def weight_index(self, coset: int) -> Tuple[List[int], Dict]:
+        """
+        Gets an index into a weight parameter tensor.
+
+        :param coset: The filter coset weight tensor should be for
+        :returns: A tuple (filter_index, reverse_index)
+
+        filter_index is used by unpack_weights to unpack a parameter tensor into a tensor compatible with PyTorch's
+        convolution functions.
+
+        reverse_index gives an index into a weight tensor. I.e. if I want to set stencil element (x,y) to some value, I
+        would set  param_tensor[0,0, reverse_index[(x,y)]] = value.
+        """
+        coset_stencil = self.coset_decompose(packed_output=True)[coset]
+        starts, boundaries = self.stencil_boundaries(coset, canonical=True, cartesian=True)
+
+        # boundaries = [b-a for b,a in zip(boundaries, starts)]
         filter_index = [0] * prod(boundaries)
+
+
         reverse_index = {}
         for _, idx in enumerate(coset_stencil):
+            idx = tuple([b-a for b,a in zip(idx, starts)])
             filter_index[np.ravel_multi_index(idx, boundaries)] = _ + 1
             reverse_index[idx] = _
         return filter_index, reverse_index
 
-    def zero_weights(self, coset, channels_in, channels_out, device=None):
-        coset_stencil = self.coset_decompose(output_cartesian=True)[coset]
+    def zero_weights(self,
+                     coset: int,
+                     channels_in: int,
+                     channels_out: int,
+                     device: Optional[torch.device]=None)->torch.tensor:
+        """
+        Creates an empty tensor of weights.
+
+        :param coset: The filter coset weight tensor should be for
+        :param channels_in: The number of channels in for the filter
+        :param channels_out: The number of output channels for the filter
+        :param device: The device on which the weights exist
+        """
+        coset_stencil = self.coset_decompose(packed_output=True)[coset]
         return torch.zeros(channels_in, channels_out, len(coset_stencil), device=device)
 
-    def unpack_weights(self, coset, weights, indices):
+    def unpack_weights(self,
+                       coset: int,
+                       weights: torch.Tensor,
+                       indices: Optional[torch.IntTensor]) -> torch.Tensor:
+        """
+        Upacks a weight tensor.
+
+        :param coset: coset
+        :param weights: A tensor of [channels_in, channels_out, coset_stencil_size]
+        :param indices: Index `filter_index` from
+
+        :return: a tensor of dimension [channels_in, channels_out, h, w, ...]
+        """
         device = weights.device
         c_in, c_out, _ = weights.shape
         _, boundary = self.stencil_boundaries(coset, canonical=True, cartesian=True)
@@ -96,22 +193,20 @@ class Stencil:
             weights = torch.index_select(torch.cat([z, weights], dim=-1), -1, indices)
         return weights.reshape(*(c_in, c_out, *boundary))
 
-    def weights_to_filter(self, coset, weights):
-        """ Returns a """
-        pass
-
-    def coset_decompose(self, output_cartesian=True):
+    def coset_decompose(self, packed_output: bool = True) -> List:
         """
         This function partitions the stencil into 'n' sets, where 'n' is the number of Cartesian
         cosets of the parent lattice.
 
-        Returns a list of lists. Each sublist contains the stencil points for the corresponding
+        :param packed_output: If true, each coset is scaled and shifted to the origin
+
+        :returns: a list of lists. Each sublist contains the stencil points for the corresponding
         coset of the stencil.
         """
-        if self._cache_cartesian_coset_stencils is not None and output_cartesian:
+        if self._cache_cartesian_coset_stencils is not None and packed_output:
             return self._cache_cartesian_coset_stencils
 
-        if self._cache_coset_stencils is not None and not output_cartesian:
+        if self._cache_coset_stencils is not None and not packed_output:
             return self._cache_coset_stencils
 
         cosets = [[] for _ in range(self.lattice.coset_count)]
@@ -121,39 +216,29 @@ class Stencil:
                 raise ValueError(f"Stencil contains an invalid lattice site, {lattice_site} is "
                                  f"not on the target lattice!")
             lattice_site = torch.IntTensor(lattice_site)
-            if output_cartesian:
+            if packed_output:
                 lattice_site = (lattice_site - self.lattice.coset_offset(index))//self.lattice._coset_scale
 
             cosets[index] += [tuple([int(_.item()) for _ in lattice_site])]
 
-        if output_cartesian:
+        if packed_output:
             self._cache_cartesian_coset_stencils = [_[:] for _ in cosets]
         else:
             self._cache_coset_stencils = [_[:] for _ in cosets]
 
         return cosets
 
-    def stencil_boundaries(self, coset_index, canonical=True, cartesian=True):
-        if coset_index is None:
-            coset = self.stencil + [[0] * self.lattice.dimension]
-        else:
-            coset = self.coset_decompose(output_cartesian=cartesian)[coset_index]
-
-        if canonical:
-            mins = [min(_) for _ in zip(*coset)]
-            coset = [[a-b for a,b in zip(_, mins)] for _ in coset]
-            maxs = [max(_)+1 for _ in zip(*coset)]
-            return mins, maxs
-
-        raise NotImplementedError
-
-    def is_coset_square(self, coset_index):
+    def is_coset_square(self, coset_index) -> bool:
         """
-        Testes whether a coset of a stencil is square.
+        Testes whether a coset of a stencil is square (i.e. packed)
+
+        :param coset_index:
+
+        :returns: True if coset coset_index is completely packed (has no zero entries)
         """
 
         if coset_index not in self._cache_squareness:
-            stencil = self.coset_decompose(output_cartesian=True)[coset_index]
+            stencil = self.coset_decompose(packed_output=True)[coset_index]
             packed = list(zip(*stencil))
             boundary_min = [min(_) for _ in packed]
             boundary_max = [max(_) for _ in packed]
@@ -164,42 +249,31 @@ class Stencil:
 
         return self._cache_squareness[coset_index]
 
-    def is_canonical(self):
-        return True
-        # """
-        # REturns true
-        # """
-        # if self._cache_canonical is not None:
-        #     return self._cache_canonical
-        #
-        # self._cache_canonical = True
-        # for stencil in self.coset_decompose(output_cartesian=False):
-        #     for site in stencil:
-        #         if any([_ for _ in site < 0]):
-        #             self._cache_canonical = False
-        #             return self._cache_canonical
-        # return self._cache_canonical
-
-    def canonicalize(self):
+    def stencil_boundaries(self,
+                           coset_index: Optional[int],
+                           canonical: bool = True,
+                           cartesian: bool = True) -> Tuple[List[int], List[int]]:
         """
-        Moves the stencil so that all of its locations are positive.
+        Returns the boundaries of the stencil.
+
+        This function can get a little complicated, so here's the breakdown. If coset_index is None, then the boundary
+        computation happens all over the whole stencil. If coset_index is not None, then the boundary will be computed
+        over the elements that belong to that coset.
+
+        If canonical is
+
+
         """
-        changed = False
+        if coset_index is None:
+            assert not cartesian
+            coset = self.stencil[:] + [[0] * self.lattice.dimension]
+        else:
+            coset = self.coset_decompose(packed_output=cartesian)[coset_index]
 
-        coset_stencils = self.coset_decompose(output_cartesian=False)
+        if canonical:
+            mins = [min(_) for _ in zip(*coset)]
+            coset = [[a-b for a,b in zip(_, mins)] for _ in coset]
+            maxs = [max(_)+1 for _ in zip(*coset)]
+            return mins, maxs
 
-        if not self.is_canonical():
-            pass
-        # x|x x
-        # go-o-o
-        # We're looking for a shift f \in L that
-
-
-
-        # Clear out stencil cache if we changed the internal representation of the stencil
-        if changed:
-            self._cache_coset_stencils = None
-            self._cache_cartesian_coset_stencils = None
-            self._cache_squareness = {}
-            self._cache_canonical = True
-
+        raise NotImplementedError

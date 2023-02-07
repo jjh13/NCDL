@@ -59,6 +59,9 @@ def pad(lt: LatticeTensor, pad, mode='constant', value=0.0):
     dim = parent.dimension
     num_cosets = parent.coset_count
     scale = parent.coset_scale
+    if mode == 'zero':
+        mode = 'constant'
+        value = 0.0
 
     assert len(pad) % 2 == 0
     assert len(pad) // 2 <= dim
