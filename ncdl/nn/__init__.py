@@ -1,0 +1,1 @@
+from ncdl.nn.modules.convolution import LatticeConvolution
