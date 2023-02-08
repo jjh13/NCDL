@@ -14,15 +14,21 @@ import torch
 
 class LatticeTensor:
     """
-    A LatticeTensor container abstracts the idea of storing information on a lattice.
+    A LatticeTensor container is the base data structure for processing data on non-Cartesian lattices. It extends the
+    concept of tensor to
     """
 
     def __init__(self,
                  lt: "LatticeTensor" = None,
                  alt_cosets: List[torch.Tensor] = None,
                  parent: "Lattice" = None,
-                 alt_offsets: List[torch.IntTensor] = None,
-                 ):
+                 alt_offsets: List[torch.IntTensor] = None):
+        """
+        Generally, an end-user should not be using this constructor. This constructor is meant to be used by
+
+
+
+        """
 
         # If we have an alternative set of cosets we want to construct
         # ensure that they have the same shape
@@ -377,6 +383,10 @@ class Lattice:
     def _validate_coset_vectors(self, vectors):
         #
         pass
+
+    def __eq__(self, other):
+        eq = all([(a - b).abs().sum() < 1e-5 for a,b in zip(self.coset_vectors, other.coset_vectors)])
+        return eq and all([(a - b).abs().sum() < 1e-5 for a,b in zip(self.coset_scale, other.coset_scale)])
 
     def _coset_sort(self, vectors, cosets=None):
         ret_cosets = True

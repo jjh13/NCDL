@@ -3,7 +3,9 @@ import torch
 from ncdl.lattice import Lattice
 from ncdl.nn.functional.pad import pad
 from ncdl.nn.functional.norm import coset_moments, instance_norm, batch_norm, group_norm
-
+from ncdl.nn.modules.batchnorm import LatticeBatchNorm
+from ncdl.nn.modules.instancenorm import LatticeInstanceNorm
+from ncdl.nn.modules.groupnorm import LatticeGroupNorm
 
 class LatticeNorm(unittest.TestCase):
     def setUp(self):
@@ -43,6 +45,17 @@ class LatticeNorm(unittest.TestCase):
         self.assertTrue((ltn.coset(0) - xn[:,:,:,:16]).pow(2).sum() < 1e-5)
         self.assertTrue((ltn.coset(1) - xn[:,:,:,16:]).pow(2).sum() < 1e-5)
 
+    def test_instance_norm_layer(self):
+        qc = Lattice('qc')
+        coset0 = torch.rand(2, 3, 16, 16)
+        coset1 = torch.rand(2, 3, 16, 16)
+
+        lt = qc(coset0, coset1)
+        lin = LatticeInstanceNorm(qc, 3)
+
+        lt = lin(lt)
+
+
     def test_batch_norm(self):
         qc = Lattice('qc')
         coset0 = torch.rand(2, 3, 16, 16)*10000
@@ -58,6 +71,19 @@ class LatticeNorm(unittest.TestCase):
         self.assertTrue((ltn.coset(0) - xn[:,:,:,:16]).pow(2).sum() < 1e-5)
         self.assertTrue((ltn.coset(1) - xn[:,:,:,16:]).pow(2).sum() < 1e-5)
 
+    def test_batch_norm_layer(self):
+        qc = Lattice('qc')
+        coset0 = torch.rand(2, 3, 16, 16)*10000
+        coset1 = torch.rand(2, 3, 16, 16)*0.0001
+
+        lt = qc(coset0, coset1)
+
+        lbn = LatticeBatchNorm(qc, 3)
+        lt  = lbn(lt)
+
+        # self.assertTrue((ltn.coset(1) - xn[:,:,:,16:]).pow(2).sum() < 1e-5)
+
+
     def test_group_norm0(self):
         x = torch.rand(2, 6, 2, 2)
 
@@ -72,6 +98,16 @@ class LatticeNorm(unittest.TestCase):
 
         x_n1 = x_gn.reshape(2,6,2,2)
         print(x_n0 - x_n1)
+
+    def test_group_norm_layer(self):
+        qc = Lattice('qc')
+        coset0 = torch.rand(2, 12, 2, 2)
+        coset1 = torch.rand(2, 12, 2, 2)
+
+        lt = qc(coset0, coset1)
+        lgn = LatticeGroupNorm(qc, 3, 12)
+
+        lt=lgn(lt)
 
 
 
