@@ -2,14 +2,10 @@ import unittest
 import torch
 from ncdl.lattice import Lattice
 from ncdl.util.stencil import Stencil
-from ncdl.nn.convolution import LatticeConvolution
+from ncdl.nn.modules.convolution import LatticeConvolution
 
-import numpy as np
 import matplotlib.pyplot as plt
 
-from ncdl.nn.functional.downsample import downsample
-from ncdl.nn.functional.upsample import upsample
-from ncdl.nn.functional.pad import pad
 
 class ConvolutionTests(unittest.TestCase):
     def setUp(self):
@@ -42,8 +38,8 @@ class ConvolutionTests(unittest.TestCase):
     def test_conv(self):
         qc = Lattice('qc')
         stencil = Stencil([
-            (0,0),(0,2),(2,2),(1,1),(2,0)
-        ], qc)
+            (1,1),(1,3),(3,3),(2,2),(3,1)
+        ], qc, center=(1,1))
         #
         # lt = qc(
         #     { (0,0): torch.rand(1, 4, 2, 2),
@@ -53,7 +49,7 @@ class ConvolutionTests(unittest.TestCase):
 
         z = torch.zeros(1, 1, 5, 4)
         a = torch.zeros(1, 1, 4, 4)
-        a[0,0,1,1] = 1.0
+        a[0,0,2,2] = 1.0
         z[0,0,2,1] = 1.0
         lt = qc(
             { (0,0): a,
@@ -63,21 +59,22 @@ class ConvolutionTests(unittest.TestCase):
 
 
         lc = LatticeConvolution(qc, 1, 1, stencil, groups=1, bias=False)
+        #lt = stencil.pad_lattice_tensor(lt)
 
-        index, rindex = stencil.weight_index(0)
-        wts = stencil.zero_weights(0, 1, 1)
+        index, rindex = stencil.weight_index(1)
+        wts = stencil.zero_weights(1, 1, 1)
         wts[:,:,rindex[(0,0)]] = 0.1
         wts[:,:,rindex[(0,1)]] = 0.2
         wts[:,:,rindex[(1,0)]] = 0.3
         wts[:,:,rindex[(1,1)]] = 0.4
         from torch import nn
-        lc.__setattr__("weight_0", nn.Parameter(wts))
-
-
-        index, rindex = stencil.weight_index(1)
-        wts = stencil.zero_weights(1, 1, 1)
-        wts[:,:,rindex[(0,0)]] = 0.5
         lc.__setattr__("weight_1", nn.Parameter(wts))
+
+
+        index, rindex = stencil.weight_index(0)
+        wts = stencil.zero_weights(0, 1, 1)
+        wts[:,:,rindex[(0,0)]] = 0.5
+        lc.__setattr__("weight_0", nn.Parameter(wts))
 
 
         # print(lc._calc_shape_out(lt, 0))

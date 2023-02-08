@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 from ncdl.lattice import LatticeTensor, Lattice
-from ncdl.util.stencil import Stencil
 from ncdl.nn.functional.convolution import lattice_conv
+from ncdl.util.stencil import Stencil
 
 
 class LatticeConvolution(nn.Module):
@@ -69,7 +69,7 @@ class LatticeConvolution(nn.Module):
         """
         Setup the weights for each coset's stencil. Note that the 
         """
-        coset_stencils = stencil.coset_decompose(output_cartesian=True)
+        coset_stencils = stencil.coset_decompose(packed_output=True)
         for coset_id, stencil in enumerate(coset_stencils):
             # Regardless of the stencil type, we zero out the stencils here
             weights = nn.Parameter(torch.empty(channels_out, channels_in, len(stencil)))
@@ -93,6 +93,6 @@ class LatticeConvolution(nn.Module):
             index = self.get_buffer(f"stencil_index_{coset_id}")
         return self._stencil.unpack_weights(coset_id, weights, index)
 
-    def forward(self, lt: LatticeTensor):
+    def forward(self, lt: LatticeTensor) -> LatticeTensor:
         weights = [self.get_convolution_weights(i) for i in range(self._lattice.coset_count)]
         return lattice_conv(lt, self._lattice, self._stencil, weights, self._bias, self._groups)
