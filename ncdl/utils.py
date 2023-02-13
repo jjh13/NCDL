@@ -112,6 +112,11 @@ def get_coset_vector_from_name(name: str) -> Tuple[List[torch.IntTensor], torch.
             torch.IntTensor([1, 1]),
         ], torch.tensor([2., 2.])
 
+    elif name == "cp" or name == "cartesian_planar":
+        return [
+            torch.IntTensor([0, 0]),
+        ], torch.tensor([1., 1.])
+
     raise ValueError(f"Lattice '{name}' is not valid?")
 
 

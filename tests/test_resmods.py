@@ -2,7 +2,7 @@ import unittest
 import torch
 from ncdl.lattice import Lattice
 from ncdl.nn.modules import *
-from ncdl.modules.resnet import QCCPResidualBlock
+from ncdl.modules.resnet import QCCPResidualBlock, Resnet18
 
 
 class LatticeConstruction(unittest.TestCase):
@@ -38,7 +38,20 @@ class LatticeConstruction(unittest.TestCase):
 
             resblock = QCCPResidualBlock(qc, 3, 16, downsample=2)
             resblock = resblock.to(device)
-            resblock(lta)
+            output = resblock(lta)
+
+            pass
+
+    def test_resnet(self):
+        """
+        Tests that lattices, when constructed with consistent devices, report the same device.
+        """
+        qc = Lattice("qc")
+        for device in self.devices:
+            a0 = torch.rand(16, 3, 224, 224, device=device)
+
+            rn = Resnet18().to(device)
+            output = rn(a0)
 
             pass
 

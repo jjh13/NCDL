@@ -280,7 +280,10 @@ class LatticeTensor:
         return  self._coset_offsets[:]
 
     def coset_vector(self, coset: int) -> torch.IntTensor:
-        return self._coset_offsets[coset]
+        try:
+            return self._coset_offsets[coset]
+        except:
+            pass
 
 
 class Lattice:

@@ -1,11 +1,10 @@
 import unittest
 import torch
 from ncdl.lattice import Lattice
-from ncdl.nn.functional.pad import pad
 from ncdl.nn.functional.norm import coset_moments, instance_norm, batch_norm, group_norm
-from ncdl.nn.modules.batchnorm import LatticeBatchNorm
-from ncdl.nn.modules.instancenorm import LatticeInstanceNorm
-from ncdl.nn.modules.groupnorm import LatticeGroupNorm
+from ncdl.nn.modules import LatticeBatchNorm
+from ncdl.nn.modules import LatticeInstanceNorm
+from ncdl.nn.modules import LatticeGroupNorm
 
 class LatticeNorm(unittest.TestCase):
     def setUp(self):

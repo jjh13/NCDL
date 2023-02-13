@@ -1,2 +1,2 @@
-# ncdl
+# NCDL
 Non-Cartesian Deep Learning

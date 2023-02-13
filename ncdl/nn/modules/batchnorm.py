@@ -1,8 +1,6 @@
 import torch
 import torch.nn as nn
 from ncdl.lattice import LatticeTensor, Lattice
-from ncdl.nn.functional.convolution import lattice_conv
-from ncdl.util.stencil import Stencil
 from torch.nn.modules.batchnorm import _NormBase
 from ncdl.nn.functional.norm import batch_norm
 

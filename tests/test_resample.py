@@ -3,7 +3,7 @@ import torch
 from ncdl.lattice import Lattice
 from ncdl.nn.functional.downsample import downsample, downsample_lattice
 from ncdl.nn.functional.upsample import upsample
-from ncdl.nn.modules.resample import LatticeUpsample, LatticeDownsample
+from ncdl.nn.modules import LatticeUpsample, LatticeDownsample
 
 
 class LatticeConstruction(unittest.TestCase):
