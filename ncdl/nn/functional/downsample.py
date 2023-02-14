@@ -7,12 +7,13 @@ import numpy as np
 from itertools import product
 import math
 from ncdl.nn.functional.upsample import find_coset_vectors, _gcd_star
+import numpy as np
 
 def downsample_lattice(lattice: Lattice, s_matrix: np.array):
     B = np.stack(lattice.coset_vectors, axis=-1)
-    B = np.concatenate([B, torch.diag(lattice.coset_scale)], axis=-1)
+    B = np.concatenate([B, np.diag(lattice.coset_scale)], axis=-1)
     L, U = column_style_hermite_normal_form(B)
-    D = s_matrix.numpy()
+    D = s_matrix
     s = lattice.dimension
     L = D @ L[:s, :s]
     D, c = find_coset_vectors(L)
@@ -23,21 +24,20 @@ def downsample_lattice(lattice: Lattice, s_matrix: np.array):
 
     scale = D.diagonal()//gcd
 
-    return Lattice([torch.IntTensor([_/gcd for _ in v]) for v in c], torch.IntTensor(scale))
+    return Lattice([np.array([_/gcd for _ in v], dtype='int') for v in c], np.array(scale, dtype='int'))
 
 
 def downsample(lt: LatticeTensor, s_matrix: torch.IntTensor):
 
     with torch.no_grad():
-        B = torch.stack(lt.parent.coset_vectors, dim=-1)
-        B = torch.cat([B, torch.diag(lt.parent.coset_scale)], dim=-1).numpy()
+        B = np.stack(lt.parent.coset_vectors, axis=-1)
+        B = np.concatenate([B, np.diag(lt.parent.coset_scale)], axis=-1)
         L, U = column_style_hermite_normal_form(B)
-        D = s_matrix.numpy()
+        D = s_matrix
         s = lt.parent.dimension
         L = D @ L[:s, :s]
         D, c = find_coset_vectors(L)
-        D = torch.IntTensor(D)
-        coset_stride = [int(_.detach().item()) for _ in D.diag()//lt.parent.coset_scale]
+        coset_stride = [int(_) for _ in D.diagonal()//lt.parent.coset_scale]
 
     coset_data = []
     for v in c:
@@ -55,7 +55,7 @@ def downsample(lt: LatticeTensor, s_matrix: torch.IntTensor):
             # Now we shift it until we find the "left-most" (according to each dimension)
             # coordinate for this coset
             for _ in range(s):
-                w = -D @ torch.IntTensor([1 if __ == _ else 0 for __ in range(s)])
+                w = -D @ np.array([1 if __ == _ else 0 for __ in range(s)], dtype='int')
 
                 if lt.on_lattice(vector + w):
                     vector = vector + w
@@ -66,12 +66,12 @@ def downsample(lt: LatticeTensor, s_matrix: torch.IntTensor):
             coset_data += [(v, data)]
 
     # Now remove the gcd
-    gcd1 = _gcd_star(*D.diag())
+    gcd1 = _gcd_star(*D.diagonal())
     gcd2 = _gcd_star(*sum([list(v) for v, _ in coset_data], []))
     gcd = math.gcd(gcd1, gcd2)
 
 
-    sl = Lattice([torch.IntTensor([c/gcd for c in v]) for v, _ in coset_data], D.diag()/gcd)
+    sl = Lattice([np.array([c/gcd for c in v], dtype='int') for v, _ in coset_data], D.diagonal()/gcd)
 
     return sl(
         {

@@ -1,5 +1,6 @@
 import unittest
 import torch
+import numpy as np
 from ncdl.lattice import Lattice
 from ncdl.nn.functional.pad import pad
 
@@ -14,10 +15,10 @@ class LatticePaddingTests(unittest.TestCase):
 
     def test_lattice_pad_3l(self):
         offset, scale = [
-            torch.IntTensor([0, 0]),
-            torch.IntTensor([1, 1]),
-            torch.IntTensor([2, 2]),
-        ], torch.tensor([3., 3.])
+            np.array([0, 0], dtype='int'),
+            np.array([1, 1], dtype='int'),
+            np.array([2, 2], dtype='int'),
+        ], np.array([3, 3], dtype='int')
 
         qc = Lattice(offset, scale)
         for device in self.devices:

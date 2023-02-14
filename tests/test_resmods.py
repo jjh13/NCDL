@@ -1,7 +1,7 @@
 import unittest
 import torch
 from ncdl.lattice import Lattice
-from ncdl.nn.modules import *
+from ncdl.nn import *
 from ncdl.modules.resnet import QCCPResidualBlock, Resnet18
 
 
@@ -30,7 +30,7 @@ class LatticeConstruction(unittest.TestCase):
             Q = torch.nn.Sequential(ReLU(True), ReLU(True))
             relu = Q
             lta = relu(lta)
-            print(lta.coset(1))
+            # print(lta.coset(1))
 
             # ds = LatticeDownsample(qc, torch.IntTensor(torch.IntTensor([[1, 1], [1, -1]])))
             # lta = ds(lta)

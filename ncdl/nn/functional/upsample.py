@@ -18,7 +18,7 @@ def upsample_lattice(lattice: Lattice, s_matrix: np.array):
     D = np.linalg.inv(s_matrix)
 
     B = np.stack(lattice.coset_vectors, axis=-1)
-    B = np.concatenate([B, torch.diag(lattice.coset_scale)], axis=-1)
+    B = np.concatenate([B, np.diag(lattice.coset_scale)], axis=-1)
     L, U = column_style_hermite_normal_form(k*B)
     s = lattice.dimension
     L = D @ L[:s, :s]
@@ -30,7 +30,7 @@ def upsample_lattice(lattice: Lattice, s_matrix: np.array):
 
     scale = D.diagonal()//gcd
 
-    return Lattice([torch.IntTensor([_/gcd for _ in v]) for v in c], torch.IntTensor(scale))
+    return Lattice([np.array([_/gcd for _ in v], dtype='int') for v in c], np.array(scale, dtype='int'))
 
 
 
@@ -42,15 +42,14 @@ def upsample(lt: LatticeTensor, s_matrix: torch.IntTensor):
     bounds = [(k * _[0], k * _[1]) for _ in lt.lattice_bounds()]
 
     with torch.no_grad():
-        B = torch.stack(lt.parent.coset_vectors, dim=-1)
-        B = torch.cat([B, torch.diag(lt.parent.coset_scale)], dim=-1).numpy()
+        B = np.stack(lt.parent.coset_vectors, axis=-1)
+        B = np.concatenate([B, np.diag(lt.parent.coset_scale)], axis=-1)
         L, U = column_style_hermite_normal_form(k*B)
         s = lt.parent.dimension
         L = D @ L[:s, :s]
         D, c = find_coset_vectors(L)
-        D = torch.IntTensor(D)
-        stride = k * lt.parent.coset_scale // D.diag()
-        stride = [int(_.item()) for _ in stride]
+        stride = k * lt.parent.coset_scale // D.diagonal()
+        stride = [int(_) for _ in stride]
 
     batch, channels = lt.coset(0).shape[:2]
 
@@ -59,15 +58,15 @@ def upsample(lt: LatticeTensor, s_matrix: torch.IntTensor):
     # now we push all cosets as far left as we can, and allocate the array
     for v in c:
 
-        v = torch.IntTensor(v)
+        v = np.array(v, dtype='int')
         # Push Left
         for _ in range(s):
-            w = -D @ torch.IntTensor([1 if __ == _ else 0 for __ in range(s)])
+            w = -D @ np.array([1 if __ == _ else 0 for __ in range(s)], dtype='int')
             if _in_bounds(bounds, v + w):
                 v = v + w
 
         # Create an all zero array for the coset
-        local_size = [ int((end - v[i])/D.diag()[i]) + 1 for (i,(start, end)) in enumerate(bounds[2:])]
+        local_size = [ int((end - v[i])/D.diagonal()[i]) + 1 for (i,(start, end)) in enumerate(bounds[2:])]
         coset = torch.zeros((batch, channels, *local_size), device=lt.device)
         cosets += [(v, coset)]
 
@@ -81,10 +80,12 @@ def upsample(lt: LatticeTensor, s_matrix: torch.IntTensor):
         # Search for the coset we're going to inject into
         for v_prime, dest_coset in cosets:
             with torch.no_grad():
-                array_index = (offset - v_prime)/D.diag()
-                if torch.frac(array_index).abs().sum().item() > 1e-4:
+                array_index = (offset - v_prime)/D.diagonal()
+                if np.abs(np.modf(array_index)[0]).sum() > 1e-4:
                     continue
-                array_index = [int(_.item()) for _ in array_index]
+                # if torch.frac(array_index).abs().sum().item() > 1e-4:
+                #     continue
+                array_index = [int(_) for _ in array_index]
 
                 # Construct the slices for the assignment, we start with the default slice that
                 # selects all batches and channels
@@ -103,19 +104,19 @@ def upsample(lt: LatticeTensor, s_matrix: torch.IntTensor):
     # remove the GCD to keep the lattice structures from getting too large -- this isn't a technical problem
     # but I'd like to avoid this creep, just to keep our integers in reasonable ranges without overflowing
     o_shift, _ = cosets[0]
-    cosets = [(v - o_shift, data) for v,data in cosets]
+    cosets = [(v - o_shift, data) for v, data in cosets]
 
     # Now remove the gcd
-    gcd1 = _gcd_star(*D.diag())
+    gcd1 = _gcd_star(*D.diagonal())
     gcd2 = _gcd_star(*sum([list(v) for v, _ in cosets], []))
     gcd = math.gcd(gcd1, gcd2)
-    cosets = [(v//gcd, data)for v,data in cosets]
+    cosets = [(v//gcd, data) for v,data in cosets]
 
     # Finally construct the lattice object
-    sl = Lattice([torch.IntTensor([c//gcd for c in v]) for v, _ in cosets], D.diag()/gcd)
+    sl = Lattice([np.array([c//gcd for c in v], dtype='int') for v, _ in cosets], D.diagonal()/gcd)
 
     return sl(
         {
-            v: data for v, data in cosets
+            tuple([int(_) for _ in v]): data for v, data in cosets
         }
     )

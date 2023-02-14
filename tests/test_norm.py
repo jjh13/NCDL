@@ -2,9 +2,7 @@ import unittest
 import torch
 from ncdl.lattice import Lattice
 from ncdl.nn.functional.norm import coset_moments, instance_norm, batch_norm, group_norm
-from ncdl.nn.modules import LatticeBatchNorm
-from ncdl.nn.modules import LatticeInstanceNorm
-from ncdl.nn.modules import LatticeGroupNorm
+from ncdl.nn import LatticeBatchNorm, LatticeInstanceNorm, LatticeGroupNorm
 
 class LatticeNorm(unittest.TestCase):
     def setUp(self):
@@ -21,7 +19,7 @@ class LatticeNorm(unittest.TestCase):
         coset1 = torch.rand(2, 3, 16, 16)
 
         lt = qc(coset0, coset1)
-        mean, var = coset_moments(lt, dims=[-1,-2])
+        _, mean, var = coset_moments(lt, dims=[-1,-2])
 
         x = torch.cat([coset0, coset1], dim=-1)
         mu = x.mean([-1, -2], keepdim=True)

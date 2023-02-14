@@ -6,6 +6,8 @@ from torch import nn
 from ncdl.lattice import Lattice, LatticeTensor
 from ncdl.nn.functional.downsample import downsample_lattice, downsample
 from ncdl.nn.functional.upsample import upsample_lattice, upsample
+import numpy as np
+
 
 class LatticeUpsample(nn.Module):
     def __init__(self, lattice: Lattice, upsampling_matrix):
@@ -22,7 +24,7 @@ class LatticeUpsample(nn.Module):
     def forward(self, lt: LatticeTensor) -> LatticeTensor:
         if lt.parent != self._lattice:
             raise ValueError(f"Input lattice tensor does not belong to the parent lattice!")
-        return upsample(lt, torch.IntTensor(self._smatrix))
+        return upsample(lt, self._smatrix)
 
 
 class LatticeDownsample(nn.Module):
@@ -39,4 +41,4 @@ class LatticeDownsample(nn.Module):
     def forward(self, lt: LatticeTensor) -> LatticeTensor:
         if lt.parent != self._lattice:
             raise ValueError(f"Input lattice tensor does not belong to the parent lattice!")
-        return downsample(lt, torch.IntTensor(self._smatrix))
+        return downsample(lt, np.array(self._smatrix, dtype='int'))

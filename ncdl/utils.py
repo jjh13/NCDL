@@ -83,7 +83,7 @@ def interval_differences(list_of_intervals):
     return ret
 
 
-def get_coset_vector_from_name(name: str) -> Tuple[List[torch.IntTensor], torch.Tensor]:
+def get_coset_vector_from_name(name: str) -> Tuple[List[np.array], np.array]:
     """
     For a canonical
 
@@ -94,28 +94,28 @@ def get_coset_vector_from_name(name: str) -> Tuple[List[torch.IntTensor], torch.
 
     if name == "bcc" or name == "body centered cubic":
         return [
-            torch.IntTensor([0, 0, 0]),
-            torch.IntTensor([1, 1, 1]),
-        ], torch.tensor([2., 2., 2.])
+            np.array([0, 0, 0], dtype='int'),
+            np.array([1, 1, 1], dtype='int'),
+        ], np.array([2, 2, 2], dtype='int')
 
     elif name == "fcc" or name == "face centered cubic":
         return [
-            torch.IntTensor([0, 0, 0]),
-            torch.IntTensor([0, 1, 1]),
-            torch.IntTensor([1, 0, 1]),
-            torch.IntTensor([1, 1, 0]),
-        ], torch.tensor([2., 2., 2.])
+            np.array([0, 0, 0], dtype='int'),
+            np.array([0, 1, 1], dtype='int'),
+            np.array([1, 0, 1], dtype='int'),
+            np.array([1, 1, 0], dtype='int'),
+        ], np.array([2, 2, 2], dtype='int')
 
     elif name == "qc" or name == "quincunx":
         return [
-            torch.IntTensor([0, 0]),
-            torch.IntTensor([1, 1]),
-        ], torch.tensor([2., 2.])
+            np.array([0, 0], dtype='int'),
+            np.array([1, 1], dtype='int'),
+        ], np.array([2, 2], dtype='int')
 
     elif name == "cp" or name == "cartesian_planar":
         return [
-            torch.IntTensor([0, 0]),
-        ], torch.tensor([1., 1.])
+            np.array([0, 0], dtype='int'),
+        ], np.array([1, 1], dtype='int')
 
     raise ValueError(f"Lattice '{name}' is not valid?")
 

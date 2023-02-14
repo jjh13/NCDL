@@ -215,7 +215,7 @@ class Stencil:
             if index is None:
                 raise ValueError(f"Stencil contains an invalid lattice site, {lattice_site} is "
                                  f"not on the target lattice!")
-            lattice_site = torch.IntTensor(lattice_site)
+            lattice_site = np.array(lattice_site, dtype='int')
             if packed_output:
                 lattice_site = (lattice_site - self.lattice.coset_offset(index))//self.lattice._coset_scale
 

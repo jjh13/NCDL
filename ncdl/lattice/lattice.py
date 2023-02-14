@@ -56,7 +56,7 @@ class LatticeTensor:
             raise ValueError(f"No lattice data for constructor!")
 
         self._coset_offsets, self._cosets = self.parent._coset_sort(coset_offsets, cosets)
-        self._coset_offsets = [torch.IntTensor([int(e) for e in csv]) for csv in self._coset_offsets]
+        self._coset_offsets = [np.array([int(e) for e in csv], dtype='int') for csv in self._coset_offsets]
         self._validate()
 
     def _validate(self):
@@ -162,8 +162,22 @@ class LatticeTensor:
                 mins = [int(min(a, _)) for a, _ in zip(mm, mins)]
         return (0, batch_size-1), (0, channel_size-1), *list(zip(mins, maxs))
 
-    def on_lattice(self, p : torch.IntTensor):
+    def on_lattice(self, p: np.array):
+        """
+        Tests if a point is on the given lattice
+
+        :param p: an integer numpy array with dimension s.
+        """
         b, c, *dim = self.lattice_bounds()
+
+        if len(p.shape) != 1 or p.shape[0] != self.parent.dimension:
+            raise ValueError(f"Invalid input shape, p should be {self.parent.dimension}-dimensional")
+
+        if p.dtype != 'int':
+            pass
+            raise ValueError(f"p should be an int vector!")
+
+
         if self.parent.coset_index(p) is not None:
             if all([d[0] <= _ <= d[1] for (_, d) in zip(p, dim)]):
                 return True
@@ -227,7 +241,7 @@ class LatticeTensor:
             found = 0
             for i, p in enumerate(a):
                 for j, q in enumerate(b):
-                    if (p - q).sum().abs().item() < self.eps:
+                    if np.abs(p - q).sum() < self.eps:
                         if tuple(self._cosets[i].shape) == tuple(other._cosets[j].shape):
                             corresp[i] = j
                             found += 1
@@ -279,7 +293,7 @@ class LatticeTensor:
     def coset_vectors(self):
         return  self._coset_offsets[:]
 
-    def coset_vector(self, coset: int) -> torch.IntTensor:
+    def coset_vector(self, coset: int) -> np.array:
         try:
             return self._coset_offsets[coset]
         except:
@@ -295,7 +309,7 @@ class Lattice:
 
     def __init__(self,
                  input_lattice: Union[List, str],
-                 scale: Union[torch.IntTensor, None] = None,
+                 scale: Union[np.array, None] = None,
                  tensor_backend: torch._tensor = torch.Tensor):
         """
         Instantiate the LatticeTensor factory.
@@ -323,10 +337,11 @@ class Lattice:
             raise ValueError(f"The input 'coset' should be a non-empty list of IntTensors")
 
         # TODO: Change this to np.array
-        if any([not isinstance(_, torch.IntTensor) for _ in coset]):
-            raise ValueError(f"The input 'coset' should be a non-empty list of IntTensors")
+        if any([not isinstance(_, (np.ndarray, np.generic))  for _ in coset]):
+            pass
+            raise ValueError(f"The input 'coset' should be a non-empty list of np.array")
 
-        if any([_.size() != coset[0].size() for _ in coset]):
+        if any([_.size != coset[0].size for _ in coset]):
             raise ValueError(f"The input 'coset' should be a non-empty list of 1-D IntTensors with the same size")
 
         self.tensor = tensor_backend
@@ -334,7 +349,7 @@ class Lattice:
         self._coset_scale = scale
 
         with torch.no_grad():
-            canonical_offsets = [_ % scale.abs() for _ in coset]
+            canonical_offsets = [_ % np.abs(scale) for _ in coset]
             # TODO: change to np.array(, dtype='int')
             self._coset_vectors = sorted(canonical_offsets,
                                          key=lambda x: sum([abs(_.item()) for _ in x[:]])
@@ -349,23 +364,24 @@ class Lattice:
         return self._dimension
 
     @property
-    def coset_scale(self) -> torch.IntTensor:
-        return self._coset_scale.detach()
+    def coset_scale(self) -> np.array:
+        return self._coset_scale
 
     @property
     def coset_count(self) -> int:
         return len(self._coset_vectors)
 
-    def coset_index(self, pt: Union[Tuple[int], List[int], torch.IntTensor]) -> Union[int, None]:
+    def coset_index(self, pt: Union[Tuple[int], List[int], np.array]) -> Union[int, None]:
+        # if isinstance(pt, np.array):
+        #     assert pt.dtype ==
         return self.cartesian_index(pt)[0]
 
-    def cartesian_index(self, pt: Union[Tuple[int], List[int], torch.IntTensor]):
-        # TODO: change to np.array(, dtype='int')
+    def cartesian_index(self, pt: Union[Tuple[int], List[int], np.array]):
         if type(pt) == tuple or type(pt) == list:
-            pt = torch.IntTensor([int(_) for _ in pt])
+            pt = np.array([int(_) for _ in pt], dtype='int')
         for idx, c in enumerate(self._coset_vectors):
             x = (1 / self._coset_scale) * (pt - c)
-            if all([(_.round() - _).abs() < 2 * torch.finfo().eps for _ in x]):
+            if all([np.abs(_.round() - _) < 2 * torch.finfo().eps for _ in x]):
                 return idx, x
         return None, None
 
@@ -373,11 +389,11 @@ class Lattice:
         # TODO: change to np.array(, dtype='int')
         if 0 > idx <= self.coset_count:
             raise ValueError('Invalid coset offset index!')
-        return self._coset_vectors[idx].detach()
+        return self._coset_vectors[idx].astype('int')
 
     def cartesian_to_lattice(self, pt, coset_index):
 
-        return self._coset_scale * torch.tensor(pt) + self._coset_vectors[coset_index]
+        return (self._coset_scale * np.array(pt, dtype='int') + self._coset_vectors[coset_index]).astype('int')
 
     def __cmp__(self, other):
         # TODO: Check if tensors implement a cmp method, then implement this
@@ -388,8 +404,8 @@ class Lattice:
         pass
 
     def __eq__(self, other):
-        eq = all([(a - b).abs().sum() < 1e-5 for a,b in zip(self.coset_vectors, other.coset_vectors)])
-        return eq and all([(a - b).abs().sum() < 1e-5 for a,b in zip(self.coset_scale, other.coset_scale)])
+        eq = all([np.abs(a - b).sum() < 1e-5 for a,b in zip(self.coset_vectors, other.coset_vectors)])
+        return eq and all([np.abs(a - b).sum() < 1e-5 for a,b in zip(self.coset_scale, other.coset_scale)])
 
     def _coset_sort(self, vectors, cosets=None):
         ret_cosets = True
@@ -416,7 +432,7 @@ class Lattice:
                 raise ValueError("Too many arguments!")
 
             with torch.no_grad():
-                vectors = [torch.IntTensor(_) for _ in args[0]]
+                vectors = [np.array(_, dtype='int') for _ in args[0]]
                 self._validate_coset_vectors(vectors)
                 cosets = [args[0][_] for _ in args[0]]
                 vectors, cosets = self._coset_sort(vectors, cosets)

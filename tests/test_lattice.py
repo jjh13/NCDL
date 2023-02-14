@@ -1,5 +1,6 @@
 import unittest
 import torch
+import numpy as np
 from ncdl.lattice import Lattice
 from ncdl.nn.functional.pad import pad
 
@@ -98,6 +99,8 @@ class LatticeConstruction(unittest.TestCase):
             self.assertEqual(bounds[2], (-1, 4))
             self.assertEqual(bounds[3], (-1, 4))
 
+            self.assertTrue(lta.on_lattice(np.array([0, 0], dtype='int')))
+
     def test_create_qc_shifted_add(self):
         """
         Tests that operations between shifted (but consistent) lattices succeed
@@ -142,10 +145,10 @@ class LatticeConstruction(unittest.TestCase):
                 (-1, -1): a1
             }).to(device)
 
-            self.assertTrue(lta.on_lattice(torch.IntTensor([-1,-1])))
-            self.assertTrue(lta.on_lattice(torch.IntTensor([1,1])))
-            self.assertTrue(lta.on_lattice(torch.IntTensor([0,2])))
-            self.assertFalse(lta.on_lattice(torch.IntTensor([-1,2])))
+            self.assertTrue(lta.on_lattice(np.array([-1,-1], dtype='int')))
+            self.assertTrue(lta.on_lattice(np.array([1,1], dtype='int')))
+            self.assertTrue(lta.on_lattice(np.array([0,2], dtype='int')))
+            self.assertFalse(lta.on_lattice(np.array([-1,2], dtype='int')))
 
     def test_create_qc_add(self):
         """
@@ -169,7 +172,6 @@ class LatticeConstruction(unittest.TestCase):
             self.assertEqual(ltc.coset(0).sum(), (a0.to(device)+b0.to(device)).sum())
             self.assertEqual(ltc.coset(1).sum(), (a1.to(device)+b1.to(device)).sum())
 
-
     def test_create_qc_mult(self):
         for device in self.devices:
             qc = Lattice("qc")
@@ -188,23 +190,6 @@ class LatticeConstruction(unittest.TestCase):
 
             self.assertEqual(ltc.coset(0).sum(), (a0.to(device)*b0.to(device)).sum())
             self.assertEqual(ltc.coset(1).sum(), (a1.to(device)*b1.to(device)).sum())
-
-    def test_qc_coset_decompose(self):
-        qc = Lattice("qc")
-        stencil = [
-            (0, 0),
-            (1, 1),
-            (2, 0),
-            (0, 2),
-            (2, 2)
-        ]
-        coset_stencil = qc.coset_decompose(stencil)
-
-        for check_point in [(0,0), (1,0), (0, 1), (1, 1)]:
-            self.assertIn(check_point, coset_stencil[0])
-
-        for check_point in [(0,0)]:
-            self.assertIn(check_point, coset_stencil[1])
 
     def test_lattice_slice0(self):
         qc = Lattice("qc")
@@ -249,7 +234,3 @@ class LatticeConstruction(unittest.TestCase):
         self.assertEqual(tuple(lt.shift_constants(0, 1)), (0, 0))
         self.assertEqual(tuple(lt.shift_constants(1, 0)), (-1, -1))
         self.assertEqual(tuple(lt.shift_constants(1, 1)), (0, 0))
-
-
-        print(lt.delta(0))
-        print(lt.delta(1))

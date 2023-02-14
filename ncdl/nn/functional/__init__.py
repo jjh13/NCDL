@@ -16,7 +16,7 @@ def _extend_to_lattice_tensor(functional):
     function = getattr(F, functional)
     def wrapped_curried_function(lt: LatticeTensor, *args, **kwargs):
         return lt.parent({
-            v: function(*[lt.coset(idx), *args], **kwargs) for idx,v in enumerate(lt.coset_vectors)
+            tuple([int(_) for _ in v]): function(*[lt.coset(idx), *args], **kwargs) for idx,v in enumerate(lt.coset_vectors)
         })
     sys.modules[__name__].__setattr__(functional, wrapped_curried_function)
 [_extend_to_lattice_tensor(_) for _ in __import_from]

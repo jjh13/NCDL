@@ -114,7 +114,6 @@ class StencilTests(unittest.TestCase):
         self.assertTupleEqual(stencil.delta_shift(lt, 1, 0), (-1,-1))
         self.assertTupleEqual(stencil.delta_shift(lt, 1, 1), (0, -1))
 
-
         # Get the indices for the weight tensor
         index, rindex = stencil.weight_index(0)
 

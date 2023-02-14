@@ -3,7 +3,8 @@ import torch
 from ncdl.lattice import Lattice
 from ncdl.nn.functional.downsample import downsample, downsample_lattice
 from ncdl.nn.functional.upsample import upsample
-from ncdl.nn.modules import LatticeUpsample, LatticeDownsample
+from ncdl.nn import LatticeUpsample, LatticeDownsample
+import numpy as np
 
 
 class LatticeConstruction(unittest.TestCase):
@@ -17,7 +18,7 @@ class LatticeConstruction(unittest.TestCase):
 
     def test_create_basic_cartesian(self):
         cl = Lattice(
-            [torch.IntTensor([0,0])], torch.IntTensor([1,1])
+            [np.array([0,0], dtype='int')], np.array([1,1], dtype='int')
         )
         a0 = torch.rand(1, 3, 10, 10)
         lt = cl({(0,0):a0})
@@ -27,7 +28,7 @@ class LatticeConstruction(unittest.TestCase):
     def test_downsample_layer(self):
         qc = Lattice("qc")
 
-        D = torch.IntTensor([[1, 1], [1, -1]])
+        D = np.array([[1, 1], [1, -1]], dtype='int')
 
         downsample_lattice(qc, D)
 
@@ -38,7 +39,7 @@ class LatticeConstruction(unittest.TestCase):
             (0, 0): a0,
             (1, 1): a1
         })
-        D = torch.IntTensor([[1,1],[1,-1]])
+
         ldl = LatticeDownsample(qc, D)
         self.assertNotEqual(qc, ldl.down_lattice)
 
@@ -60,7 +61,7 @@ class LatticeConstruction(unittest.TestCase):
     def test_upsample_layer(self):
         qc = Lattice("qc")
 
-        D = torch.IntTensor([[1, 1], [1, -1]])
+        D = np.array([[1, 1], [1, -1]], dtype='int')
 
         downsample_lattice(qc, D)
 
