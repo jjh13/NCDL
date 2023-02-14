@@ -41,15 +41,15 @@ def upsample(lt: LatticeTensor, s_matrix: torch.IntTensor):
     # Get the boundary of the scaled input
     bounds = [(k * _[0], k * _[1]) for _ in lt.lattice_bounds()]
 
-    with torch.no_grad():
-        B = np.stack(lt.parent.coset_vectors, axis=-1)
-        B = np.concatenate([B, np.diag(lt.parent.coset_scale)], axis=-1)
-        L, U = column_style_hermite_normal_form(k*B)
-        s = lt.parent.dimension
-        L = D @ L[:s, :s]
-        D, c = find_coset_vectors(L)
-        stride = k * lt.parent.coset_scale // D.diagonal()
-        stride = [int(_) for _ in stride]
+    # TODO: Use the output from the upsample lattice function -- don't re-compute this here
+    B = np.stack(lt.parent.coset_vectors, axis=-1)
+    B = np.concatenate([B, np.diag(lt.parent.coset_scale)], axis=-1)
+    L, U = column_style_hermite_normal_form(k*B)
+    s = lt.parent.dimension
+    L = D @ L[:s, :s]
+    D, c = find_coset_vectors(L)
+    stride = k * lt.parent.coset_scale // D.diagonal()
+    stride = [int(_) for _ in stride]
 
     batch, channels = lt.coset(0).shape[:2]
 
@@ -79,20 +79,19 @@ def upsample(lt: LatticeTensor, s_matrix: torch.IntTensor):
 
         # Search for the coset we're going to inject into
         for v_prime, dest_coset in cosets:
-            with torch.no_grad():
-                array_index = (offset - v_prime)/D.diagonal()
-                if np.abs(np.modf(array_index)[0]).sum() > 1e-4:
-                    continue
-                # if torch.frac(array_index).abs().sum().item() > 1e-4:
-                #     continue
-                array_index = [int(_) for _ in array_index]
+            array_index = (offset - v_prime)/D.diagonal()
+            if np.abs(np.modf(array_index)[0]).sum() > 1e-4:
+                continue
+            # if torch.frac(array_index).abs().sum().item() > 1e-4:
+            #     continue
+            array_index = [int(_) for _ in array_index]
 
-                # Construct the slices for the assignment, we start with the default slice that
-                # selects all batches and channels
-                coset_slice = [
-                    slice(0, None, 1),
-                    slice(0, None, 1)
-                ] + [slice(a_idx, None, stride[iidx]) for iidx, a_idx in enumerate(array_index)]
+            # Construct the slices for the assignment, we start with the default slice that
+            # selects all batches and channels
+            coset_slice = [
+                slice(0, None, 1),
+                slice(0, None, 1)
+            ] + [slice(a_idx, None, stride[iidx]) for iidx, a_idx in enumerate(array_index)]
             dest_coset[coset_slice] = data
             injected = True
             break

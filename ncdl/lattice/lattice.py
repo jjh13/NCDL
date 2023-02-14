@@ -145,21 +145,20 @@ class LatticeTensor:
         channel_size = self._cosets[0].shape[1]
         mins = [0] * self.parent.dimension
         maxs = None
-        with torch.no_grad():
-            for idx, c in enumerate(self._cosets):
-                # Get the raw array dimension, then scale it by the coset scale
-                dimensions = [(array_dim-1) * dim_scale.item() for array_dim, dim_scale in zip(c.shape[2:], self.parent.coset_scale)]
+        for idx, c in enumerate(self._cosets):
+            # Get the raw array dimension, then scale it by the coset scale
+            dimensions = [(array_dim-1) * dim_scale.item() for array_dim, dim_scale in zip(c.shape[2:], self.parent.coset_scale)]
 
-                # Offset that by the coset offest
-                dimensions = [array_dim + dim_offset.item() for array_dim, dim_offset in zip(dimensions, self._coset_offsets[idx])]
+            # Offset that by the coset offest
+            dimensions = [array_dim + dim_offset.item() for array_dim, dim_offset in zip(dimensions, self._coset_offsets[idx])]
 
-                if maxs is None:
-                    maxs = dimensions
-                else:
-                    maxs = [int(max(a, _)) for a, _ in zip(dimensions, maxs)]
+            if maxs is None:
+                maxs = dimensions
+            else:
+                maxs = [int(max(a, _)) for a, _ in zip(dimensions, maxs)]
 
-                mm = [int(z.item()) for z in self._coset_offsets[idx]]
-                mins = [int(min(a, _)) for a, _ in zip(mm, mins)]
+            mm = [int(z.item()) for z in self._coset_offsets[idx]]
+            mins = [int(min(a, _)) for a, _ in zip(mm, mins)]
         return (0, batch_size-1), (0, channel_size-1), *list(zip(mins, maxs))
 
     def on_lattice(self, p: np.array):
@@ -230,51 +229,48 @@ class LatticeTensor:
         """
         if len(self._coset_offsets) != len(other._coset_offsets):
             raise ValueError("LatticeTensors must belong to the same lattice")
-        with torch.no_grad():
-            c_a = sum(self._coset_offsets) / len(self._coset_offsets)
-            c_b = sum(other._coset_offsets) / len(other._coset_offsets)
 
-            a = [_ - c_a for _ in self._coset_offsets]
-            b = [_ - c_b for _ in other._coset_offsets]
+        c_a = sum(self._coset_offsets) / len(self._coset_offsets)
+        c_b = sum(other._coset_offsets) / len(other._coset_offsets)
 
-            corresp = [0] * len(a)
-            found = 0
-            for i, p in enumerate(a):
-                for j, q in enumerate(b):
-                    if np.abs(p - q).sum() < self.eps:
-                        if tuple(self._cosets[i].shape) == tuple(other._cosets[j].shape):
-                            corresp[i] = j
-                            found += 1
-                            break
-            if found != len(a):
-                raise ValueError('Lattices do not have a correspondence between cosets')
+        a = [_ - c_a for _ in self._coset_offsets]
+        b = [_ - c_b for _ in other._coset_offsets]
+
+        corresp = [0] * len(a)
+        found = 0
+        for i, p in enumerate(a):
+            for j, q in enumerate(b):
+                if np.abs(p - q).sum() < self.eps:
+                    if tuple(self._cosets[i].shape) == tuple(other._cosets[j].shape):
+                        corresp[i] = j
+                        found += 1
+                        break
+        if found != len(a):
+            raise ValueError('Lattices do not have a correspondence between cosets')
         return corresp
 
     def __add__(self, other):
         correspondence = self._find_correspondence(other)
         keys = {}
-        with torch.no_grad():
-            for i, (offset, coset_a) in enumerate(zip(self._coset_offsets, self._cosets)):
-                offset = tuple([int(_) for _ in offset])
-                keys[tuple(offset)] = coset_a + other._cosets[correspondence[i]]
+        for i, (offset, coset_a) in enumerate(zip(self._coset_offsets, self._cosets)):
+            offset = tuple([int(_) for _ in offset])
+            keys[tuple(offset)] = coset_a + other._cosets[correspondence[i]]
         return self.parent(keys)
 
     def __sub__(self, other):
         correspondence = self._find_correspondence(other)
         keys = {}
-        with torch.no_grad():
-            for i, (offset, coset_a) in enumerate(zip(self._coset_offsets, self._cosets)):
-                offset = tuple([int(_) for _ in offset])
-                keys[tuple(offset)] = coset_a - other._cosets[correspondence[i]]
+        for i, (offset, coset_a) in enumerate(zip(self._coset_offsets, self._cosets)):
+            offset = tuple([int(_) for _ in offset])
+            keys[tuple(offset)] = coset_a - other._cosets[correspondence[i]]
         return self.parent(keys)
 
     def __mul__(self, other):
         correspondence = self._find_correspondence(other)
         keys = {}
-        with torch.no_grad():
-            for i, (offset, coset_a) in enumerate(zip(self._coset_offsets, self._cosets)):
-                offset = tuple([int(_) for _ in offset])
-                keys[tuple(offset)] = coset_a * other._cosets[correspondence[i]]
+        for i, (offset, coset_a) in enumerate(zip(self._coset_offsets, self._cosets)):
+            offset = tuple([int(_) for _ in offset])
+            keys[tuple(offset)] = coset_a * other._cosets[correspondence[i]]
         return self.parent(keys)
 
     def raw_coset_point_info(self, lattice_site):
@@ -348,11 +344,10 @@ class Lattice:
         self._dimension = coset[0].shape[0]
         self._coset_scale = scale
 
-        with torch.no_grad():
-            canonical_offsets = [_ % np.abs(scale) for _ in coset]
-            # TODO: change to np.array(, dtype='int')
-            self._coset_vectors = sorted(canonical_offsets,
-                                         key=lambda x: sum([abs(_.item()) for _ in x[:]])
+        canonical_offsets = [_ % np.abs(scale) for _ in coset]
+        # TODO: change to np.array(, dtype='int')
+        self._coset_vectors = sorted(canonical_offsets,
+                                     key=lambda x: sum([abs(_.item()) for _ in x[:]])
             )
 
     @property
@@ -431,11 +426,10 @@ class Lattice:
             if len(args) > 1:
                 raise ValueError("Too many arguments!")
 
-            with torch.no_grad():
-                vectors = [np.array(_, dtype='int') for _ in args[0]]
-                self._validate_coset_vectors(vectors)
-                cosets = [args[0][_] for _ in args[0]]
-                vectors, cosets = self._coset_sort(vectors, cosets)
+            vectors = [np.array(_, dtype='int') for _ in args[0]]
+            self._validate_coset_vectors(vectors)
+            cosets = [args[0][_] for _ in args[0]]
+            vectors, cosets = self._coset_sort(vectors, cosets)
 
         else:
             cosets = args
