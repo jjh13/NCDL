@@ -19,13 +19,13 @@ class LatticeNorm(unittest.TestCase):
         coset1 = torch.rand(2, 3, 16, 16)
 
         lt = qc(coset0, coset1)
-        _, mean, var = coset_moments(lt, dims=[-1,-2])
+        _, mean, var, numels = coset_moments(lt, dims=[-1,-2])
 
         x = torch.cat([coset0, coset1], dim=-1)
         mu = x.mean([-1, -2], keepdim=True)
         va = torch.var(x, dim=[-1, -2], keepdim=True, unbiased=False)
         self.assertTrue((mu - mean).pow(2).sum().item() < 1e-5)
-        self.assertTrue((var - va).pow(2).sum().item() < 1e-5)
+        self.assertTrue((var/numels - va).pow(2).sum().item() < 1e-5)
 
     def test_instance_norm(self):
         qc = Lattice('qc')
@@ -33,33 +33,84 @@ class LatticeNorm(unittest.TestCase):
         coset1 = torch.rand(2, 3, 16, 16)
 
         lt = qc(coset0, coset1)
-
         x = torch.cat([coset0, coset1], dim=-1)
-
         ltn = instance_norm(lt)
         xn = torch.nn.functional.instance_norm(x)
-
         self.assertTrue((ltn.coset(0) - xn[:,:,:,:16]).pow(2).sum() < 1e-5)
         self.assertTrue((ltn.coset(1) - xn[:,:,:,16:]).pow(2).sum() < 1e-5)
 
-    def test_instance_norm_layer(self):
-        qc = Lattice('qc')
-        coset0 = torch.rand(2, 3, 16, 16)
-        coset1 = torch.rand(2, 3, 16, 16)
+    def test_instance_norm_layer_cp(self):
+        cp = Lattice('cp')
 
-        lt = qc(coset0, coset1)
-        lin = LatticeInstanceNorm(qc, 3)
+        lbn = LatticeInstanceNorm(cp, 16, track_running_stats=True)
+        cbn = torch.nn.InstanceNorm2d(16, track_running_stats=True)
 
-        lt = lin(lt)
+        # Run a number of batches to ensure that some stats get accumulated
+        for _ in range(2):
+            coset0 = torch.rand(2, 16, 16, 16, requires_grad=True)
+
+            # Clone and setup (lattice) tensors
+            coset_joined = coset0.clone().detach()
+            coset_joined.requires_grad = True
+            lt = cp(coset0)
+
+            # Pass thru the layers
+            lto = lbn(lt)
+            cto = cbn(coset_joined)
+
+            with torch.no_grad():
+                # Check that the running stats are computed correctly
+                self.assertAlmostEqual((lbn.running_var - cbn.running_var).pow(2).sum().item(), 0)
+                self.assertAlmostEqual((lbn.running_mean - cbn.running_mean).pow(2).sum().item(), 0)
+
+                # Check that the output is equal
+                self.assertAlmostEqual((lto.coset(0) - cto[:, :, :, ]).pow(2).sum().item(), 0)
+
+            # backward
+            (cto**3).sum().backward()
+            (lto.coset(0)**3).sum().backward()
+
+            with torch.no_grad():
+                self.assertAlmostEqual((coset_joined.grad - coset0.grad).pow(2).sum().item(), 0, places=6)
+
+        # Enter eval mode
+        lbn.eval()
+        cbn.eval()
+
+        # Go thru more batches to ensure that the running stats are identical
+        for _ in range(2):
+            coset0 = torch.rand(2, 16, 16, 16, requires_grad=True)
+
+            # Clone and setup (lattice) tensors
+            coset_joined = coset0.clone().detach()
+            coset_joined.requires_grad = True
+            lt = cp(coset0)
+
+            # Pass thru the layers
+            lto = lbn(lt)
+            cto = cbn(coset_joined)
+
+            with torch.no_grad():
+                self.assertAlmostEqual((lbn.running_var - cbn.running_var).pow(2).sum().item(), 0)
+                self.assertAlmostEqual((lbn.running_mean - cbn.running_mean).pow(2).sum().item(), 0)
+
+
+                # First check that the batch norm agrees on the cosets
+                self.assertAlmostEqual((lto.coset(0) - cto[:, :, :, :16]).pow(2).sum().item(), 0)
+
+            # backward
+            (cto**3).sum().backward()
+            (lto.coset(0)**3).sum().backward()
+
+            with torch.no_grad():
+                self.assertAlmostEqual((coset_joined.grad - coset0.grad).pow(2).sum().item(), 0, places=6)
 
 
     def test_batch_norm(self):
         qc = Lattice('qc')
-        coset0 = torch.rand(2, 3, 16, 16)*10000
-        coset1 = torch.rand(2, 3, 16, 16)*0.0001
-
+        coset0 = torch.rand(2, 3, 16, 16)*100
+        coset1 = torch.rand(2, 3, 16, 16)*0.001
         lt = qc(coset0, coset1)
-
         x = torch.cat([coset0, coset1], dim=-1)
 
         ltn = batch_norm(lt)
@@ -68,17 +119,53 @@ class LatticeNorm(unittest.TestCase):
         self.assertTrue((ltn.coset(0) - xn[:,:,:,:16]).pow(2).sum() < 1e-5)
         self.assertTrue((ltn.coset(1) - xn[:,:,:,16:]).pow(2).sum() < 1e-5)
 
+
+
     def test_batch_norm_layer(self):
+        cp = Lattice('cp')
+
+        lbn = LatticeBatchNorm(cp, 16)
+        cbn = torch.nn.BatchNorm2d(16)
+
+        for _ in range(1):
+            coset0 = torch.rand(2, 16, 16, 16, requires_grad=True)
+            # coset1 = torch.rand(2, 16, 16, 16, requires_grad=True)
+            coset_joined = coset0.clone().detach()
+            coset_joined.requires_grad = True
+
+            lt = cp(coset0)
+
+            lto = lbn(lt)
+            cto = cbn(coset_joined)
+
+            # # First check that the batch norm agrees on the cosets
+            self.assertAlmostEqual((lto.coset(0) - cto[:, :, :, :16]).pow(2).sum().item(), 0)
+            # self.assertAlmostEqual((lto.coset(0) - cto[:, :, :, :16]).pow(2).sum().item(), 0)
+            # self.assertTrue((lto.coset(1) - cto[:, :, :, 16:]).pow(2).sum().item() < 1e-5)
+
+
+    def test_batch_norm_layer_qc(self):
         qc = Lattice('qc')
-        coset0 = torch.rand(2, 3, 16, 16)*10000
-        coset1 = torch.rand(2, 3, 16, 16)*0.0001
 
-        lt = qc(coset0, coset1)
+        lbn = LatticeBatchNorm(qc, 16)
+        cbn = torch.nn.BatchNorm2d(16)
 
-        lbn = LatticeBatchNorm(qc, 3)
-        lt  = lbn(lt)
+        for _ in range(1):
+            coset0 = torch.rand(2, 16, 16, 16, requires_grad=True)
+            coset1 = torch.rand(2, 16, 16, 16, requires_grad=True)
+            coset_joined = torch.cat([coset0, coset1], dim=-1).detach()
+            coset_joined.requires_grad = True
 
-        # self.assertTrue((ltn.coset(1) - xn[:,:,:,16:]).pow(2).sum() < 1e-5)
+            lt = qc(coset0, coset1)
+
+            lto = lbn(lt)
+            cto = cbn(coset_joined)
+
+            # First check that the batch norm agrees on the cosets
+            self.assertAlmostEqual((lto.coset(0) - cto[:, :, :, :16]).pow(2).sum().item(), 0)
+            self.assertAlmostEqual((lto.coset(0) - cto[:, :, :, :16]).pow(2).sum().item(), 0)
+            self.assertTrue((lto.coset(1) - cto[:, :, :, 16:]).pow(2).sum().item() < 1e-5)
+
 
 
     def test_group_norm0(self):

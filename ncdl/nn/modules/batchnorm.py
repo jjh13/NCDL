@@ -57,10 +57,11 @@ class LatticeBatchNorm(_NormBase):
         passed when the update should occur (i.e. in training mode when they are tracked), or when buffer stats are
         used for normalization (i.e. in eval mode when buffers are not None).
         """
+
         sliced = [None, slice(0, None)] + [None] * self._lattice.dimension
         return batch_norm(input,
-                          self.running_mean[sliced] if not self.training or self.track_running_stats else None,
-                          self.running_var[sliced] if not self.training or self.track_running_stats else None,
+                          self.running_mean if not self.training or self.track_running_stats else None,
+                          self.running_var if not self.training or self.track_running_stats else None,
                           self.weight[sliced],
                           self.bias[sliced],
                           bn_training,

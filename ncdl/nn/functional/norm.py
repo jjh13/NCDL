@@ -2,6 +2,7 @@ from ncdl.lattice import Lattice, LatticeTensor
 from math import prod
 from typing import Optional
 from torch import Tensor
+import torch
 
 
 def coset_moments(lt: LatticeTensor, groups=None, dims=None):
@@ -42,7 +43,7 @@ def coset_moments(lt: LatticeTensor, groups=None, dims=None):
     sum_ = sum(sums)
     mean = sum_ / numel
     sumvar = sum(sumsq) - sum_ * mean
-    return grouped_cosets, mean, sumvar / numel
+    return grouped_cosets, mean, sumvar, numel
 
 
 def base_norm(
@@ -60,10 +61,22 @@ def base_norm(
     batches, channels, *idims = lt.coset(0).shape
 
     grouped_cosets = None
-    if not use_input_stats or (running_var is None or running_mean is None):
-        grouped_cosets, mean, var = coset_moments(lt, dims=dims, groups=groups)
+
+    if use_input_stats:
+        grouped_cosets, mean, var_sum, numels = coset_moments(lt, dims=dims, groups=groups)
+
+        if running_mean is not None:
+            with torch.no_grad():
+                mean_ = torch.resize_as_(mean.mean(dim=[0, 2, 3], keepdim=True), running_mean)
+                running_mean.copy_((1 - momentum) * running_mean + momentum * mean_)
+        if running_var is not None:
+            with torch.no_grad():
+                var_ = torch.resize_as_((var_sum/(numels - 1)).mean(dim=[0, 2, 3], keepdim=True), running_var)
+                running_var.copy_((1 - momentum) * running_var + momentum * var_)
+        var = var_sum/numels
     else:
-        mean, var = running_mean, running_var
+        slice_ = [None, slice(0, None)] + [None] * lt.parent.dimension
+        mean, var = running_mean[slice_], running_var[slice_]
 
     std = (var + eps).sqrt()
 
