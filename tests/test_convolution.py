@@ -3,7 +3,7 @@ import torch
 from ncdl.lattice import Lattice
 from ncdl.util.stencil import Stencil
 from ncdl.nn import LatticeConvolution, LatticeDownsample, LatticePad
-
+import numpy as np
 import matplotlib.pyplot as plt
 
 
@@ -106,6 +106,39 @@ class ConvolutionTests(unittest.TestCase):
         print(xx.coset(1))
 
         pass
+
+    def test_conv_grad(self):
+        qc = Lattice('qc')
+        stencil = Stencil([
+            (0,0),(0,2),(2,2),(1,1),(2,0)
+        ], qc, center=(1,1))
+
+        a = torch.rand(1, 4, 10, 10, requires_grad=True)
+        b = torch.rand(1, 4, 10, 10, requires_grad=True)
+
+        lt = qc(
+            { (0,0): a,
+              (1,1): b
+              }
+        )
+
+        # lc = torch.nn.Sequential(
+            # LatticePad(qc, stencil),
+        lc0 = LatticeConvolution(qc, 4, 1, stencil, groups=1, bias=True)
+        # )
+        lc = torch.nn.Sequential(
+            LatticePad(qc, stencil),
+            lc0,
+            LatticeDownsample(qc, np.array([[1, 1], [1, -1]]))
+        )
+
+        out = lc(lt)
+        out = out.coset(0).sum() # + out.coset(1).sum()
+        out.backward()
+
+        pass
+
+
 
 
 

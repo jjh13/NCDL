@@ -82,8 +82,9 @@ class ImageNetLightningModel(LightningModule):
         print(f'*************** Loading model {self.arch}')
         print('*' * 80)
 
-
-        self.model = Resnet18(numclasses=10)
+        # 21.8, 21.8 M
+        self.model = Resnet18(numclasses=1000, variant=0)
+        # self.model = models.resnet34(False)
 
     def forward(self, x):
         return self.model(x)

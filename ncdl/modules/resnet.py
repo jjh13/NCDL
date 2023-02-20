@@ -3,14 +3,17 @@ import torch.nn as nn
 
 from ncdl.lattice import Lattice
 from ncdl.nn import *
-# from ncdl.nn.modules import ReLU
-# from ncdl.nn.modules import LatticeConvolution
-# from ncdl.nn.modules import LatticeBatchNorm
-# from ncdl.nn.modules import LatticeDownsample
-# from ncdl.nn.modules import LatticeWrap, LatticeUnwrap
-# from ncdl.nn.modules import LatticePad
 from ncdl.util.stencil import Stencil
 
+
+class NormalResidualBlock(nn.Module):
+    def __init__(self,
+                 lattice_in,
+                 in_channels,
+                 out_channels,
+                 downsample=1):
+        super(NormalResidualBlock, self).__init__()
+        pass
 
 
 class QCCPResidualBlock(nn.Module):
@@ -23,7 +26,7 @@ class QCCPResidualBlock(nn.Module):
 
         # Define the stencils that we use for the filters on different lattices
         cp_stencil = [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2), (2, 0), (2, 1), (2, 2)]
-        cp_center = (1,1)
+        cp_center = (1, 1)
         cp_s = Stencil(cp_stencil, Lattice("cp"), center=cp_center)
 
         # qc_stencil = [(1, 1), (2, 2), (3, 1), (1, 3), (3, 3), (0, 2), (2, 0), (0, 4), (4, 0)]
@@ -34,68 +37,109 @@ class QCCPResidualBlock(nn.Module):
 
         # Choose the target lattice
         if downsample == 1:
+            print("ds1")
             downsample = nn.Identity()
-            self.project = nn.Sequential(
-                LatticeConvolution(lattice_in, in_channels, out_channels, Stencil([(0,0)], lattice_in, center=(0,0))),
-                LatticeBatchNorm(lattice_in, out_channels)
-            )
+            if in_channels != out_channels:
+                self.project = nn.Sequential(
+                    # LatticeConvolution(
+                    #     lattice_in,
+                    #     in_channels,
+                    #     out_channels,
+                    #     Stencil([(0,0)], lattice_in, center=(0,0)),
+                    #     bias=False),
+                        LatticeUnwrap(),
+                        nn.Conv2d(in_channels, out_channels, kernel_size=1, padding=0, bias=False),
+                        nn.BatchNorm2d(out_channels),
+                        LatticeWrap()
+                # LatticeBatchNorm(lattice_in, out_channels)
+                )
+            else:
+                self.project = nn.Identity()
             lattice_out = lattice_in
+            dsint = 1
 
         elif downsample == 2:
+            print("ds2")
+
             downsample = LatticeDownsample(lattice_in, torch.IntTensor([[1, 1], [1, -1]]))
 
             self.project = nn.Sequential(
                 downsample,
-                LatticeConvolution(downsample.down_lattice, in_channels, out_channels, Stencil([(0,0)], downsample.down_lattice, center=(0,0))),
+                LatticeConvolution(downsample.down_lattice, in_channels, out_channels, Stencil([(0,0)], downsample.down_lattice, center=(0,0)), bias=False),
                 LatticeBatchNorm(downsample.down_lattice, out_channels)
             )
             lattice_out = downsample.down_lattice
-
+            dsint = 2
         elif downsample == 4:
-            downsample = LatticeDownsample(lattice_in, torch.IntTensor(torch.IntTensor([[2, 0], [0, 2]])))
+            print("ds4")
+
+            downsample = LatticeDownsample(lattice_in, torch.IntTensor([[2, 0], [0, 2]]))
             self.project = nn.Sequential(
-                downsample,
-                LatticeConvolution(lattice_in, in_channels, out_channels, Stencil([(0,0)], downsample.down_lattice, center=(0,0))),
-                LatticeBatchNorm(downsample.down_lattice, out_channels)
+                # downsample,
+                # LatticeConvolution(
+                #     lattice_in,
+                #     in_channels,
+                #     out_channels,
+                #     Stencil([(0,0)], downsample.down_lattice, center=(0,0)),
+                #     bias=False
+                # ),
+                LatticeUnwrap(),
+                nn.Conv2d(in_channels, out_channels, kernel_size=1, padding=0, bias=False, stride=2),
+                nn.BatchNorm2d(out_channels),
+                LatticeWrap()
+            # LatticeBatchNorm(downsample.down_lattice, out_channels)
             )
             lattice_out = downsample.down_lattice
+            dsint = 4
         self.lattice_out = lattice_out
 
 
         if lattice_in == Lattice("cp"):
             self.conv1 = nn.Sequential(
-                LatticePad(lattice_in, cp_s),
-                LatticeConvolution(lattice_in, in_channels, out_channels, cp_s),
-                LatticeBatchNorm(lattice_in, out_channels),
-                downsample,
-                ReLU(inplace=True))
+                LatticeUnwrap(),
+                nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, bias=False, stride=2 if dsint == 4 else 1),
+                nn.BatchNorm2d(out_channels),
+                LatticeWrap(),
+                # LatticePad(lattice_in, cp_s),
+                # LatticeConvolution(lattice_in, in_channels, out_channels, cp_s, bias=False),
+                # LatticeBatchNorm(lattice_in, out_channels),
+                # downsample,
+                ReLU(inplace=False))
 
 
         elif lattice_in == Lattice("qc"):
             self.conv1 = nn.Sequential(
-                LatticePad(lattice_in, qc_s),
-                LatticeConvolution(lattice_in, in_channels, out_channels, qc_s),
-                LatticeBatchNorm(lattice_in, out_channels),
-                downsample,
-                ReLU(inplace=True))
+                # LatticeUnwrap(),
+                nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1, bias=False, stride=1),
+                nn.BatchNorm2d(out_channels),
+                # LatticePad(lattice_in, qc_s),
+                # LatticeConvolution(lattice_in, in_channels, out_channels, qc_s, bias=False),
+                # LatticeBatchNorm(lattice_in, out_channels),
+                # downsample,
+                nn.ReLU(inplace=False))
         else:
             raise ValueError("Invalid lattice_in! Should be quincunx or cartesian planar")
 
 
         if lattice_out == Lattice("cp"):
             self.conv2 = nn.Sequential(
-                LatticePad(lattice_out, cp_s),
-                LatticeConvolution(lattice_out, out_channels, out_channels, cp_s),
-                LatticeBatchNorm(lattice_out, out_channels),
+                # LatticePad(lattice_out, cp_s),
+                # LatticeConvolution(lattice_out, out_channels, out_channels, cp_s, bias=False),
+                LatticeUnwrap(),
+                nn.ConstantPad2d((1,1,1,1), 0.0),
+                nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=0, bias=False),
+                nn.BatchNorm2d(out_channels),
+                LatticeWrap()
+                # LatticeBatchNorm(lattice_out, out_channels),
             )
         elif lattice_out == Lattice("qc"):
             self.conv2 = nn.Sequential(
                 LatticePad(lattice_out, qc_s),
-                LatticeConvolution(lattice_out, out_channels, out_channels, qc_s),
+                LatticeConvolution(lattice_out, out_channels, out_channels, qc_s, bias=False),
                 LatticeBatchNorm(lattice_out, out_channels)
             )
 
-        self.relu_out = ReLU(inplace=True)
+        self.relu_out = ReLU(inplace=False)
 
     @property
     def down_lattice(self):
@@ -112,7 +156,7 @@ class GlobalAveragePool2d(nn.Module):
         super(GlobalAveragePool2d, self).__init__()
 
     def forward(self, x):
-        return nn.avg_pool2d(x, x.size()[2:])
+        return nn.functional.avg_pool2d(x, x.size()[2:])
 
 
 class Resnet18(nn.Module):
@@ -120,7 +164,7 @@ class Resnet18(nn.Module):
         super(Resnet18, self).__init__()
 
         self.preamble = nn.Sequential(
-            nn.Conv2d(3, 64, kernel_size=(7, 7), stride=(2, 2), padding=3),
+            nn.Conv2d(3, 64, kernel_size=(7, 7), stride=(2, 2), padding=3, bias=False),
             nn.BatchNorm2d(64),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
@@ -176,6 +220,20 @@ class Resnet18(nn.Module):
             nn.Flatten(),
             nn.Linear(512, numclasses)
         )
+
+        for m in self.modules():
+            if isinstance(m, LatticeConvolution):
+                print("?")
+                pre = m.get_convolution_weights(0).clone()
+                nn.init.kaiming_normal_(m.get_convolution_weights(0), mode="fan_out", nonlinearity="relu")
+                print("!", m.get_convolution_weights(0)-pre)
+
+            elif isinstance(m, nn.Conv2d):
+                pass
+                nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
+            elif isinstance(m, (LatticeBatchNorm, LatticeGroupNorm, nn.BatchNorm2d, nn.GroupNorm)):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
 
     @classmethod
     def _make_layer(cls, channels_in, channels_out, layers, down_factor, lattice_in):

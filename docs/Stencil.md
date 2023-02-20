@@ -27,8 +27,9 @@ lattice tensor will have the same sizes as the input lattice tensor.
 
 ### Convolution
 Convolution is relatively simple. You probably to create a convolution layer as
+
 ```python
-from ncdl.nn.convolution import LatticeConvolution
+from ncdl.nn.modules import LatticeConvolution
 
 lconv1 = LatticeConvolution(lattice, channels_in, channels_out, stencil)
 ```

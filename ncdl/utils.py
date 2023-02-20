@@ -54,6 +54,19 @@ def _gcd_star(*args):
         gcd = math.gcd(gcd, a)
     return gcd
 
+def singleton(cls):
+    instances = {}
+    def getinstance():
+        if cls not in instances:
+            instances[cls] = cls()
+        return instances[cls]
+    return getinstance
+
+@singleton
+class LatticeRegistry:
+    def register_lattice(self, lattice):
+        pass
+
 def interval_differences(list_of_intervals):
     """
     Given a list of intervals, this returns a set of intervals that are covered by one or less elements from the input

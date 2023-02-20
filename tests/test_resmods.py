@@ -4,6 +4,13 @@ from ncdl.lattice import Lattice
 from ncdl.nn import *
 from ncdl.modules.resnet import QCCPResidualBlock, Resnet18
 
+from torchvision.models.resnet import BasicBlock, conv3x3, conv1x1, resnet50
+from ncdl.util.stencil import Stencil
+from torch import nn
+import numpy as np
+
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 class LatticeConstruction(unittest.TestCase):
     def setUp(self):
@@ -13,23 +20,94 @@ class LatticeConstruction(unittest.TestCase):
         elif torch.backends.mps.is_available():
             self.devices += [torch.device('mps:0')]
 
+    def test_conv(self):
+        inout_pairs = [
+            (64, 64, 1),
+            (64, 128, 1),
+            (128, 128, 1),
+            (128, 256, 1),
+            (256, 256, 1),
+            (256, 512, 1),
+            (512, 512, 1),
+            (64, 64, 2),
+            (64, 128, 2),
+            (128, 128, 2),
+            (128, 256, 2),
+            (256, 256, 2),
+            (256, 512, 2),
+            (512, 512, 2),
+        ]
+        lattice = Lattice("cp")
+
+        cp_stencil = [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2), (2, 0), (2, 1), (2, 2)]
+        cp_center = (1, 1)
+        cp_s = Stencil(cp_stencil, lattice, center=cp_center)
+
+        for in_channels, out_channels, stride in inout_pairs:
+            conv_layer = nn.Sequential(
+                conv3x3(in_channels, out_channels, stride, 1, 1),
+                nn.BatchNorm2d(out_channels)
+            )
+
+            ln_layer = nn.Sequential(
+                LatticePad(lattice, cp_s),
+                LatticeConvolution(lattice, in_channels, out_channels, cp_s, bias=False),
+                LatticeDownsample(lattice, np.array([[stride, 0], [0, stride]], dtype='int')),
+                LatticeBatchNorm(lattice, out_channels)
+            )
+
+            self.assertEqual(
+                count_parameters(conv_layer),
+                count_parameters(ln_layer)
+            )
+
+    def test_basic_block_param_count(self):
+
+        bb = BasicBlock(128, 128, norm_layer=nn.BatchNorm2d, stride=1)
+        bqb = QCCPResidualBlock(Lattice('cp'), 128, 128, downsample=1)
+
+        self.assertEqual(count_parameters(bb), count_parameters(bqb))
+
+
+    def test_basic_block_param_count_s(self):
+        ds = nn.Sequential(
+            conv1x1(64, 128, 1),
+            nn.BatchNorm2d(128),
+        )
+
+        bb = BasicBlock(64, 128, norm_layer=nn.BatchNorm2d, stride=1, downsample=ds)
+        bqb = QCCPResidualBlock(Lattice('cp'), 64, 128, downsample=1)
+
+        self.assertEqual(count_parameters(bb), count_parameters(bqb))
+
+    def test_basic_block_param_count_ds(self):
+        ds = nn.Sequential(
+            conv1x1(64, 128, 2),
+            nn.BatchNorm2d(128),
+        )
+
+        bb = BasicBlock(64, 128, norm_layer=nn.BatchNorm2d, stride=2, downsample=ds)
+        bqb = QCCPResidualBlock(Lattice('cp'), 64, 128, downsample=4)
+
+        self.assertEqual(count_parameters(bb), count_parameters(bqb))
+
     def test_device_consistent_construction_(self):
         """
         Tests that lattices, when constructed with consistent devices, report the same device.
         """
         qc = Lattice("qc")
         for device in self.devices:
-            a0 = torch.ones(1, 3, 16, 16, device=device)
-            a1 = torch.rand(1, 3, 16, 16, device=device)
+            a0 = torch.ones(1, 3, 16, 16, device=device, requires_grad=True)
+            a1 = torch.rand(1, 3, 16, 16, device=device, requires_grad=True)
 
             lta = qc({
                 (0, 0): a0,
                 (-1, -1): -a1
             })
 
-            Q = torch.nn.Sequential(ReLU(True), ReLU(True))
-            relu = Q
-            lta = relu(lta)
+            # Q = torch.nn.Sequential(ReLU(True), ReLU(True))
+            # relu = Q
+            # lta = relu(lta)
             # print(lta.coset(1))
 
             # ds = LatticeDownsample(qc, torch.IntTensor(torch.IntTensor([[1, 1], [1, -1]])))
@@ -39,6 +117,7 @@ class LatticeConstruction(unittest.TestCase):
             resblock = QCCPResidualBlock(qc, 3, 16, downsample=2)
             resblock = resblock.to(device)
             output = resblock(lta)
+            output.coset(0).sum().backward()
 
             pass
 
@@ -47,8 +126,17 @@ class LatticeConstruction(unittest.TestCase):
         Tests that lattices, when constructed with consistent devices, report the same device.
         """
         qc = Lattice("qc")
+        rn = resnet50()
+
+        # 9536
+        # 225344
+        # 1444928
+        # 8543296
+        # 23508032
+        # 25557032
         for device in self.devices:
             a0 = torch.rand(16, 3, 224, 224, device=device)
+
 
             rn = Resnet18().to(device)
             output = rn(a0)

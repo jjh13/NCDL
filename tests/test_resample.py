@@ -111,7 +111,8 @@ class LatticeConstruction(unittest.TestCase):
 
         print(x)
 
-
+    def test_split_grad(self):
+        pass
 
     def test_upsample(self):
         qc = Lattice("qc")

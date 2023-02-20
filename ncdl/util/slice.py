@@ -21,7 +21,9 @@ def pad_or_slice_like_shape(tensor: torch._tensor, shape, mode='constant', value
     # First, calculate the padding, then pad (if we to)
     right_pad = [b - a for a, b in zip(tensor.shape[:2], shape[:2])]
     if any([_ > 0 for _ in right_pad]):
-        right_pad = [[0, 0] if _ < 0 else _ for _ in [right_pad, 0]]
+
+        right_pad = [[0, 0] if _ < 0 else [_, 0] for _ in right_pad]
+
         right_pad = sum(reversed(right_pad), [])
         tensor = F.pad(tensor, pad=right_pad, mode=mode, value=value)
 
