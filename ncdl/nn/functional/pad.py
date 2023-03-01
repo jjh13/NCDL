@@ -8,8 +8,8 @@ import itertools
 def padding_for_stencil(l: Union[Lattice, LatticeTensor],
                         filter_stencil: Union[List[List[int]]],
                         center: Union[List[int], Tuple[int]]):
-    if center not in filter_stencil:
-        raise ValueError("The stencil must contain the origin. ")
+    # if center not in filter_stencil:
+    #     raise ValueError("The stencil must contain the origin. ")
     filter_stencil = filter_stencil[:]
 
     if isinstance(l, LatticeTensor):

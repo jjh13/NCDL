@@ -6,6 +6,29 @@ from itertools import product
 import math
 
 
+def _cat_2lt(lt_a: "LatticeTensor", lt_b: "LatticeTensor", dim: int) -> "LatticeTensor":
+    if lt_a.parent != lt_b.parent:
+        raise ValueError(f"Lattices must match!")
+    if dim not in [0, 1]:
+        raise ValueError("Concatenation axis must be 0 or 1!")
+
+    correspondence = lt_a._find_correspondence(lt_b)
+    keys = {}
+    for i, (offset, coset_a) in enumerate(zip(lt_a._coset_offsets, lt_a._cosets)):
+        offset = tuple([int(_) for _ in offset])
+        keys[tuple(offset)] = torch.cat([coset_a, lt_b._cosets[correspondence[i]]], dim=dim)
+
+    return lt_a.parent(keys)
+
+def _cat_lt(lattice_tensors: List["LatticeTensor"], dim=0):
+    if len(lattice_tensors) == 0:
+        return lattice_tensors[0]
+    result = lattice_tensors[0]
+    for other in lattice_tensors[1:]:
+        result = _cat_2lt(result, other, dim=dim)
+    return result
+
+
 def is_lattice_site(L, s) -> bool:
     L = np.array(L)
     s = np.array(s)

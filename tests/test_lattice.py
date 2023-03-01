@@ -234,3 +234,26 @@ class LatticeConstruction(unittest.TestCase):
         self.assertEqual(tuple(lt.shift_constants(0, 1)), (0, 0))
         self.assertEqual(tuple(lt.shift_constants(1, 0)), (-1, -1))
         self.assertEqual(tuple(lt.shift_constants(1, 1)), (0, 0))
+
+    def test_lattice_cat(self):
+        import ncdl
+        qc = Lattice("qc")
+
+        coset0 = torch.rand(1, 3, 10, 10)
+        coset1 = torch.rand(1, 3, 10, 10)
+        lt_a = qc({
+            (0, 0): coset0,
+            (1, 1): coset1
+        })
+
+        lt_b = qc({
+            (0,0): coset0,
+            (-1,-1): coset1
+        })
+
+        for dim in [0, 1]:
+            ltc = ncdl.cat([lt_a, lt_b], dim=dim)
+            self.assertAlmostEqual(((ltc.coset(0) - torch.cat([coset0, coset1], dim=dim))**2).sum().item(), 0.0)
+            self.assertAlmostEqual(((ltc.coset(1) - torch.cat([coset1, coset0], dim=dim))**2).sum().item(), 0.0)
+
+
