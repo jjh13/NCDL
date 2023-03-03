@@ -76,7 +76,8 @@ class Stencil:
     def delta_shift(self,
                     lt: LatticeTensor,
                     coset_i: int,
-                    coset_j: int) -> Tuple[int]:
+                    coset_j: int,
+                    additive: bool = True) -> Tuple[int]:
         """
         Returns the appropriate \\delta shift from the paper. This value shifts the cosets of the filter so as to be
         appropriate/compatible with the coset we're convolving with.
@@ -91,8 +92,12 @@ class Stencil:
             raise ValueError()
 
         # This is from the paper
-        kappa = self.lattice.kappa(coset_i, coset_j, additive=True)
-        ds = self.offset_vectors[coset_j] + lt.coset_vectors[coset_i]
+        kappa = self.lattice.kappa(coset_i, coset_j, additive=additive)
+        if additive:
+            ds = self.offset_vectors[coset_j] + lt.coset_vectors[coset_i]
+        else:
+            ds = lt.coset_vectors[coset_i] - self.offset_vectors[coset_j]
+
         ds = ds - lt.coset_vectors[kappa]
         scale = 1. / self.lattice.coset_scale
 
@@ -102,6 +107,17 @@ class Stencil:
 
         # TODO: If the coset is shifted, then this should be shifted, too
         return shift
+
+    def full_pad_lattice_tensor(self,
+                           lt: LatticeTensor,
+                           mode: str='zero',
+                           value: float=0.0) -> LatticeTensor:
+
+        padding = padding_for_stencil(lt, self.stencil, tuple([0] * lt.parent.dimension))
+        padding = sum([ [_,_] for _ in padding[1::2]],[])
+
+        return pad(lt, padding, mode, value)
+
 
     def pad_lattice_tensor(self,
                            lt: LatticeTensor,

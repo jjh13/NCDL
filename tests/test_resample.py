@@ -4,8 +4,62 @@ from ncdl.lattice import Lattice
 from ncdl.nn.functional.downsample import downsample, downsample_lattice
 from ncdl.nn.functional.upsample import upsample
 from ncdl.nn import LatticeUpsample, LatticeDownsample
+from ncdl.nn import LatticeConvolution, LatticePad
+from ncdl.util.stencil import Stencil
+import torch.nn as nn
+
 import numpy as np
 
+
+def create_smoothing_qc(chan_in):
+    qc = Lattice('qc')
+
+    stencil = Stencil([
+        (0,0),(2,0),(1,1),(0,2),(2,2)
+    ], qc, center=(1,1))
+    low_pass_qc = LatticeConvolution(qc, chan_in, chan_in, stencil, groups=3, bias=False)
+
+    index, rindex = stencil.weight_index(0)
+    wts = stencil.zero_weights(0, chan_in, 1)
+    wts[:, :, rindex[(0, 0)]] = 0.125
+    wts[:, :, rindex[(0, 1)]] = 0.125
+    wts[:, :, rindex[(1, 0)]] = 0.125
+    wts[:, :, rindex[(1, 1)]] = 0.125
+    low_pass_qc.__setattr__("weight_0", nn.Parameter(wts))
+
+    index, rindex = stencil.weight_index(1)
+    wts = stencil.zero_weights(1, chan_in, 1)
+    wts[:, :, rindex[(0, 0)]] = 0.5
+    low_pass_qc.__setattr__("weight_1", nn.Parameter(wts))
+
+    return nn.Sequential(
+        LatticePad(qc, stencil),
+        low_pass_qc
+    )
+
+def create_smoothing_cp(chan_in):
+    cp = Lattice('cp')
+
+    stencil = Stencil(
+        [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2), (2, 0), (2, 1), (2, 2)],
+        cp, center=(1, 1)
+    )
+
+    low_pass_cp = LatticeConvolution(cp, chan_in, chan_in, stencil, groups=3, bias=False)
+
+    index, rindex = stencil.weight_index(0)
+    wts = stencil.zero_weights(0, chan_in, 1)
+    wts[:, :, rindex[(0, 1)]] = 0.125
+    wts[:, :, rindex[(1, 0)]] = 0.125
+    wts[:, :, rindex[(2, 1)]] = 0.125
+    wts[:, :, rindex[(1, 2)]] = 0.125
+    wts[:, :, rindex[(1, 1)]] = 0.5
+    low_pass_cp.__setattr__("weight_0", nn.Parameter(wts))
+
+    return nn.Sequential(
+        LatticePad(cp, stencil),
+        low_pass_cp
+    )
 
 class LatticeConstruction(unittest.TestCase):
     def setUp(self):
@@ -111,7 +165,37 @@ class LatticeConstruction(unittest.TestCase):
 
         print(x)
 
-    def test_split_grad(self):
+    def test_downsample_aliasing(self):
+        from PIL import Image
+        import torchvision
+        from IPython.core.display_functions import display
+        from matplotlib.pyplot import imshow
+
+        bricks = Image.open("/Users/joshuahoracsek/aliasing2.png")
+        brick_t = torchvision.transforms.functional.to_tensor(bricks)[None, ...]
+
+        qc = Lattice("cp")
+        l = qc(brick_t)
+        print(brick_t.shape)
+        D = torch.IntTensor([[1,1],[1,-1]])
+
+        #
+        s = create_smoothing_qc(3)
+        sc = create_smoothing_cp(3)
+        l = downsample(sc(l), D)
+        l = downsample(s(l),  D)
+
+        # #
+        l = downsample(sc(l), D)
+        l = downsample(s(l), D)
+
+        torchvision.transforms.functional.to_pil_image(brick_t[0, :, ::4, ::4]).save("aliasing_cp.png")
+
+        #
+        pil = torchvision.transforms.functional.to_pil_image(l.coset(0)[0])
+
+        pil.save('aliasing.png')
+        imshow(np.asarray(pil))
         pass
 
     def test_upsample(self):

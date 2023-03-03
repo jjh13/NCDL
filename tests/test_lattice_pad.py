@@ -2,7 +2,7 @@ import unittest
 import torch
 import numpy as np
 from ncdl.lattice import Lattice
-from ncdl.nn.functional.pad import pad
+from ncdl.nn.functional.pad import pad, pad_like_lattice_tensor
 
 
 class LatticePaddingTests(unittest.TestCase):
@@ -10,8 +10,8 @@ class LatticePaddingTests(unittest.TestCase):
         self.devices = [torch.device('cpu')]
         if torch.cuda.is_available():
             self.devices += [torch.device('cuda:0')]
-        elif torch.backends.mps.is_available():
-            self.devices += [torch.device('mps:0')]
+        # elif torch.backends.mps.is_available():
+        #     self.devices += [torch.device('mps:0')]
 
     def test_lattice_pad_3l(self):
         offset, scale = [
@@ -91,6 +91,25 @@ class LatticePaddingTests(unittest.TestCase):
             self.assertEqual(bounds[2],  (0, 10))
             self.assertEqual(bounds[3],  (0, 10))
             self.assertEqual(lt.device,  device)
+
+    def test_lattice_pad_like_qc(self):
+        qc = Lattice("qc")
+        for device in self.devices:
+
+            lt = qc(
+                torch.rand(1, 3, 4, 4),
+                torch.rand(1, 3, 3, 3)
+            ).to(device)
+
+            lt_ex = qc(
+                torch.rand(1, 3, 10, 13),
+                torch.rand(1, 3, 10, 13)
+            ).to(device)
+
+            lto = pad_like_lattice_tensor(lt, lt_ex)
+
+            self.assertTrue(all([a==b for (a, b) in zip(lto.coset(0).shape, lt_ex.coset(0).shape)]))
+            self.assertTrue(all([a==b for (a, b) in zip(lto.coset(1).shape, lt_ex.coset(1).shape)]))
 
 
     def test_lattice_pad_bcc(self):

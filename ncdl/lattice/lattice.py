@@ -138,7 +138,7 @@ class LatticeTensor:
           |o---o---o
          x   x   x
 
-        The example above should be (0, batch_size-1)
+        The example above should return (0, batch_size-1), (0, channels - 1), (-1, 2), (-1, 2)
 
         """
         batch_size = self._cosets[0].shape[0]
@@ -173,9 +173,7 @@ class LatticeTensor:
             raise ValueError(f"Invalid input shape, p should be {self.parent.dimension}-dimensional")
 
         if p.dtype != 'int':
-            pass
             raise ValueError(f"p should be an int vector!")
-
 
         if self.parent.coset_index(p) is not None:
             if all([d[0] <= _ <= d[1] for (_, d) in zip(p, dim)]):

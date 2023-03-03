@@ -1,15 +1,60 @@
 from ncdl.lattice import Lattice, LatticeTensor
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Optional
 from collections import defaultdict
 import torch.nn.functional as F
 import itertools
 
 
+def pad_like_lattice_tensor(
+        lt_in: LatticeTensor,
+        lt_example: LatticeTensor,
+        left_alignment: Optional[bool] = None,
+        padding_type: str = 'zero',
+        value: float = 0.0):
+    padding = padding_like_lt(lt_in, lt_example, left_alignment)
+    return pad(lt_in, padding, padding_type, value)
+
+
+def padding_like_lt(
+        lt_in: LatticeTensor,
+        lt_example: LatticeTensor,
+        left_alignment: Optional[bool] = None) -> LatticeTensor:
+    if lt_in.parent != lt_example.parent:
+        raise ValueError(f"Lattice tensors must come from the same base lattice")
+
+    if left_alignment is None:
+        left_alignment = [True] * lt_in.parent.dimension
+
+    if len(left_alignment) != lt_in.parent.dimension:
+        raise ValueError(f"Left alignment should have the same dimension as the spatial dimenson of the lattice tensor")
+
+    b, c, *dims_a = lt_in.lattice_bounds()
+    b, c, *dims_b = lt_example.lattice_bounds()
+
+    padding_list = []
+    for idx, ((lower_a, upper_a), (lower_b, upper_b)) in enumerate(zip(dims_a, dims_b[:])):
+        dims_a[idx] = (0, upper_a - lower_a)
+        dims_b[idx] = (0, upper_b - lower_b)
+        unit_distance = dims_b[idx][1] - dims_a[idx][1]
+        if unit_distance <= 0:
+            padding_list += [(0,0)]
+            continue
+
+        projected_cosets = [lt_in.parent.coset_vectors[i][idx] for i in range(lt_in.parent.coset_count)]
+        unit_per_pad = min([abs(projected_cosets[0] - _) for _ in projected_cosets[1:]])
+
+        padding = unit_distance // unit_per_pad
+        assert  unit_distance % unit_per_pad == 0
+
+        padding_list += [[0, padding] if left_alignment[idx] else [padding, 0]]
+    return tuple(sum(reversed(padding_list), []))
+
+
 def padding_for_stencil(l: Union[Lattice, LatticeTensor],
                         filter_stencil: Union[List[List[int]]],
                         center: Union[List[int], Tuple[int]]):
-    # if center not in filter_stencil:
-    #     raise ValueError("The stencil must contain the origin. ")
+    if center not in filter_stencil and any([_ != 0 for _ in center]):
+        raise ValueError("The stencil must contain the origin. ")
     filter_stencil = filter_stencil[:]
 
     if isinstance(l, LatticeTensor):
@@ -136,8 +181,3 @@ def pad(lt: LatticeTensor, pad, mode='constant', value=0.0):
     # Construct a new lattice tensor object
     new_lt = LatticeTensor(None, parent=lt.parent, alt_cosets=cs, alt_offsets=offsets)
     return new_lt
-
-def pad_like_lattice_tensor(lt: LatticeTensor, pad, mode='constant', value=0.0):
-
-    # Check that
-    pass
