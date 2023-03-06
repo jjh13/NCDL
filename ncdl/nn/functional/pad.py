@@ -35,15 +35,18 @@ def padding_like_lt(
     for idx, ((lower_a, upper_a), (lower_b, upper_b)) in enumerate(zip(dims_a, dims_b[:])):
         dims_a[idx] = (0, upper_a - lower_a)
         dims_b[idx] = (0, upper_b - lower_b)
-        unit_distance = dims_b[idx][1] - dims_a[idx][1]
+        unit_distance = int(dims_b[idx][1] - dims_a[idx][1])
         if unit_distance <= 0:
-            padding_list += [(0,0)]
+            padding_list += [[0,0]]
             continue
 
         projected_cosets = [lt_in.parent.coset_vectors[i][idx] for i in range(lt_in.parent.coset_count)]
-        unit_per_pad = min([abs(projected_cosets[0] - _) for _ in projected_cosets[1:]])
+        if len(projected_cosets) > 1:
+            unit_per_pad = min([int(abs(projected_cosets[0] - _)) for _ in projected_cosets[1:]])
+        else:
+            unit_per_pad = 1
 
-        padding = unit_distance // unit_per_pad
+        padding = int(unit_distance // unit_per_pad)
         assert  unit_distance % unit_per_pad == 0
 
         padding_list += [[0, padding] if left_alignment[idx] else [padding, 0]]
