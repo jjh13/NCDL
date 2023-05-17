@@ -3,9 +3,13 @@ import torch
 from ncdl.lattice import Lattice
 from ncdl.util.stencil import Stencil
 from ncdl.nn import LatticeConvolution, LatticeDownsample, LatticePad
+from ncdl.nn.modules.convolution import LatticeStyleConv
+
 import numpy as np
 import matplotlib.pyplot as plt
 
+import ncdl.nn as ncnn
+import torch.nn as nn
 
 class ConvolutionTests(unittest.TestCase):
     def setUp(self):
@@ -15,6 +19,24 @@ class ConvolutionTests(unittest.TestCase):
             self.device = torch.device('mps:0')
         else:
             self.device = torch.device('cpu')
+
+    def test_shape_out_lsc(self):
+        qc = Lattice('qc')
+        stencil = Stencil([
+            (0,0),(0,2),(2,2),(1,1),(2,0)
+        ], qc)
+
+        lt = qc(
+            { (0,0): torch.rand(2, 4, 3, 3),
+              (-1,1): torch.rand(2, 4, 4, 3)
+              }
+        )
+
+        lc = LatticeStyleConv(qc, 4, 8, stencil, bias=True)
+        # print(lc._calc_shape_out(lt, 0))
+        # print(lc._calc_shape_out(lt, 1))
+
+        lc.forward(lt, torch.rand(2, 4))
 
     def test_shape_out(self):
         qc = Lattice('qc')
@@ -303,7 +325,7 @@ class ConvolutionTests(unittest.TestCase):
         xlist, ylist,slist = [], [], []
         for x in range(-1, 10):
             for y in range(-1, 10):
-                if not xx.on_lattice(torch.IntTensor([x,y])):
+                if not xx.on_lattice(np.array([x,y], dtype='int')):
                     continue
 
                 xlist += [x]
@@ -325,7 +347,53 @@ class ConvolutionTests(unittest.TestCase):
         pass
 
     def test_backward(self):
+        lattice = Lattice('cp')
+        stencil = Stencil([
+            (0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2), (2, 0), (2, 1), (2, 2)
+        ], lattice, center=(1, 1))
+
+        lc = LatticeConvolution(lattice, 32, 16, stencil, groups=1, bias=False)
+
+        conv_proxy = nn.Sequential(
+            ncnn.LatticeWrap(),
+            lc,
+            ncnn.LatticeUnwrap()
+        )
+        input_tensor = torch.rand(1, 32, 64, 64, requires_grad=True)
+
+        output = conv_proxy(input_tensor)
+
+        loss = (output.sum() - 1)**2
+        loss.backward()
+
+        tensor_copy = input_tensor.detach().clone()
+        tensor_copy.requires_grad = True
+        tconv = nn.Conv2d(32, 16, kernel_size=3, padding=0, bias=False)
+        tconv.weight = nn.Parameter(
+            lc.get_convolution_weights(0).detach().clone()
+        )
+
+        output = tconv(tensor_copy)
+        loss = (output.sum() - 1)**2
+        loss.backward()
+        pass
 
 
-        torch.nn.functional.conv2d()
+    def test_hexcov(self):
+        lattice = Lattice('qc')
+        stencil = Stencil([
+            (1, 1), (2, 0), (2, 2), (3, 1), (4, 0), (4, 2), (5, 1)
+        ], lattice, center=(1, 1))
+
+        output = stencil.coset_decompose(True)
+
+        lc = LatticeConvolution(lattice, 32, 16, stencil, groups=1, bias=False)
+
+
+        pass
+
+
+
+
+
 

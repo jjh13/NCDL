@@ -12,8 +12,8 @@ setup(
     long_description=long_description,  # Optional
     long_description_content_type="text/markdown",  # Optional (see note above)
     url="http://porygon.pkmn:3000/ncdl",  # Optional
-    author="J.J. Horacsek",  # Optional
-    author_email="goobur@goobur.ca",  # Optional
+    author="Anonymous",  # Optional
+    author_email="",  # Optional
     classifiers=[  # Optional
         # How mature is this project? Common values are
         #   3 - Alpha

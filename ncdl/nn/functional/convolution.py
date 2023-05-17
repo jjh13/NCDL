@@ -4,6 +4,7 @@ import ncdl
 from ncdl.lattice import LatticeTensor, Lattice
 from ncdl.util.slice import *
 # from ncdl.util.stencil import Stencil
+from typing import List
 
 
 def lattice_conv(lt: LatticeTensor,
@@ -11,7 +12,8 @@ def lattice_conv(lt: LatticeTensor,
                  stencil: "Stencil",
                  weights,
                  bias=None,
-                 groups: int = 1):
+                 groups: int = 1,
+                 alt_cosets: List[torch.Tensor] = None):
     """
     This is one of the main contributions of the paper.
 
@@ -30,7 +32,7 @@ def lattice_conv(lt: LatticeTensor,
 
             delta = stencil.delta_shift(lt, k, i)
             kappa = lt.parent.kappa(k, i)
-            coset = shift_coset(lt.coset(kappa), delta)
+            coset = shift_coset(lt.coset(kappa) if alt_cosets is None else alt_cosets[kappa], delta)
 
             partial_conv = _conv_coset(lattice, coset, weights[i], groups)
 

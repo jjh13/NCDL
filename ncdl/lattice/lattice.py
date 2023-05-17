@@ -1,33 +1,49 @@
 """
-This is largely a rework of the ideas within some of the open research I did at Huawei
-in 2021. Most of the ideas in that work we're not well tested, and some of the implementation
-was a little sloppy (this is all on me).
 
 """
 
 from ncdl.utils import get_coset_vector_from_name, interval_differences
-from typing import List, Tuple, Union
-from collections.abc import Iterable
+from typing import List, Tuple, Union, Dict, Optional
 import numpy as np
 import torch
 
 
 class LatticeTensor:
     """
-    A LatticeTensor container is the base data structure for processing data on non-Cartesian lattices. It extends the
-    concept of tensor to
+    A LatticeTensor container is the base data structure for processing data on
+    non-Cartesian lattices. It extends the concept of the tensor to non-square
+    grids. Note that this is a base class, it need not inherent form any
+    PyTorch base clasee.
     """
 
     def __init__(self,
                  lt: "LatticeTensor" = None,
                  alt_cosets: List[torch.Tensor] = None,
                  parent: "Lattice" = None,
-                 alt_offsets: List[torch.IntTensor] = None):
+                 alt_offsets: List[np.array] = None):
         """
-        Generally, an end-user should not be using this constructor. This constructor is meant to be used by
+        Generally, an end-user should not be using this constructor. This
+        constructor is meant to be used by by the Lattice factory.
 
+        Note that this constructor is VERY bare-bones. It doesn't enforce the
+        ordering principle mentioned in the paper (the Lattice factory does
+        that).
 
+        :param lt: An input "protoypical" lattice tensor. If all other params
+                   are None this will constructor will simply clone this data.
+                   Otherwise, this forms the base for the region (and
+                   therefore coset vectors) of the lattice tensor.
 
+        :param alt_cosets: When alt_cosets is specified, lt must be specified.
+                   this will clone the structure of lt, but directly use the
+                   data in the tensors specified in alt_cosets.
+
+        :param parent: When parent is specified, then this simply sets the
+                   parent of the resultant lattice tensor to the appropriate
+                   Lattice factory. If lt is specified, we will also check
+                   against that lattice tensor's parent
+
+        :param alt_offsets:
         """
 
         # If we have an alternative set of cosets we want to construct
@@ -61,7 +77,8 @@ class LatticeTensor:
 
     def _validate(self):
         """
-        This function validates that this lattice tensor is properly formated -- i.e. consistent
+        This function validates that this lattice tensor is properly formated.
+        I.e. consistent (interleaves, channels agree, etc...)
         """
         # check all batch sizes
         bs = self._cosets[0].shape[0]
@@ -88,43 +105,87 @@ class LatticeTensor:
         return True
 
     def detach(self) -> "LatticeTensor":
+        """
+        Analog of tensor.detach()
+        """
         return LatticeTensor(self, alt_cosets=[_.detach() for _ in self._cosets])
 
     def clone(self) -> "LatticeTensor":
+        """
+        Analog of tensor.detach()
+        """
         return LatticeTensor(self, alt_cosets=[_.clone() for _ in self._cosets])
 
-    def shift_constants(self, i, j, deconv=False):
+    def shift_constants(self, i: int, j: int, deconv: bool = False) -> np.array:
+        """
+        This is the analogue of \delta(i,j) in the paper. Its a shift that is
+        used multiple different operations. See the appropriate proposition
+        where \delta(i,j) is defined in the paper.
+
+        :param i: Coset i
+        :param j: Coset j
+        :param deconv: Is this funciton used for deconvolution?
+
+        :return: an integer np.array containing the shift.
+        """
         w = -1 if deconv else 1
         kappa_shift = np.array(self.coset_vectors[self.parent.kappa(i, j)])
         shift = w*(self._coset_offsets[j] - self._coset_offsets[i]) - kappa_shift
         shift = (1/self.parent.coset_scale) * shift
         return np.array(shift.round()).astype('int')
 
-    def delta(self, i):
-        delta = np.array(self._coset_offsets[i], dtype='int')
-        delta = delta - (delta % np.array(self.parent.coset_scale, dtype='int'))
-        delta = (1/self.parent.coset_scale) * delta
-        return np.array(delta.round(), dtype='int')
-
     @property
-    def device(self):
+    def device(self) -> torch.device:
+        """
+        Returns the current device that the lattice tensor resides upon.
+        Assumes that the lattice tensor is consistent (i.e. the tensors
+        underlying the LT have not been erroneously moved)
+        """
         return self.coset(0).device
 
-    def to(self, device) -> "LatticeTensor":
+    def to(self, device: torch.device) -> "LatticeTensor":
+        """
+        Moves the lattice tensor to an appropriate device.
+
+        :param device: A valid torch.device instance.
+
+        :return: A lattice tensor instance on device.
+        """
         return LatticeTensor(self,
                              alt_cosets=[_.to(device) for _ in self._cosets],
                              alt_offsets=self._coset_offsets)
 
     def is_tensor(self) -> bool:
+        """
+        Returns true if the current lattice tensor is a Cartesian lattice tensor.
+
+        :return: Boolean value indicating Cartesian-ness.
+        """
         return len(self._cosets) == 1
 
-    def __cmp__(self, other):
-        raise NotImplementedError()
 
     def coset(self, coset: int) -> torch.Tensor:
+        """
+        Returns the underlying tensor for a given coset index.
+
+        :return: A torch tensor on self.device
+        """
         if not (0 <= coset < len(self._cosets)):
             raise ValueError(f"Invalid coset index {coset}")
         return self._cosets[coset]
+
+    @property
+    def coset_vectors(self):
+        """
+
+        """
+        return self._coset_offsets[:]
+
+    def coset_vector(self, coset: int) -> np.array:
+        try:
+            return self._coset_offsets[coset]
+        except:
+            pass
 
     def lattice_bounds(self):
         """
@@ -221,9 +282,18 @@ class LatticeTensor:
         else:
             raise NotImplementedError()
 
-    def _find_correspondence(self, other: "LatticeTensor"):
+    def _find_correspondence(self, other: "LatticeTensor") -> Optional[Dict]:
         """
+        This is mentioned briefly in the definition about compatibility, but
+        we make it concrete here. If you provide the method an invalid
+        combination of lattices, it raises an error (you shouldn't compare
+        two lattice tensors on different lattices this /should/ be
+        programmer error).
 
+        Otherwise it returns a correspondence dictionary
+
+        :param other: Another lattice tensor on the same lattice
+        :return: A dict with d[self.coset_index] = other.coset_index or
         """
         if len(self._coset_offsets) != len(other._coset_offsets):
             raise ValueError("LatticeTensors must belong to the same lattice")
@@ -247,10 +317,19 @@ class LatticeTensor:
                         found += 1
                         break
         if found != len(a):
-            raise ValueError('Lattices do not have a correspondence between cosets')
+            return None
         return corresp
 
+    def __cmp__(self, other):
+        raise NotImplementedError()
+
     def __add__(self, other):
+        """
+        Adds two lattice tensors, wraps the result in a new lattice tensor.
+
+        :param other: Another lattice tensor on the same lattice
+        :return: A lattice tensor
+        """
         correspondence = self._find_correspondence(other)
         keys = {}
         for i, (offset, coset_a) in enumerate(zip(self._coset_offsets, self._cosets)):
@@ -259,6 +338,12 @@ class LatticeTensor:
         return self.parent(keys)
 
     def __sub__(self, other):
+        """
+        Subtracts two lattice tensors, wraps the result in a new lattice tensor.
+
+        :param other: Another lattice tensor on the same lattice
+        :return: A lattice tensor
+        """
         correspondence = self._find_correspondence(other)
         keys = {}
         for i, (offset, coset_a) in enumerate(zip(self._coset_offsets, self._cosets)):
@@ -267,6 +352,12 @@ class LatticeTensor:
         return self.parent(keys)
 
     def __mul__(self, other):
+        """
+        Multiplies two lattice tensors, wraps the result in a new lattice tensor.
+        
+        :param other: Another lattice tensor on the same lattice
+        :return: A lattice tensor
+        """
         correspondence = self._find_correspondence(other)
         keys = {}
         for i, (offset, coset_a) in enumerate(zip(self._coset_offsets, self._cosets)):
@@ -286,22 +377,17 @@ class LatticeTensor:
         end = coset_scale[axis] * element_count + coset_vector[axis]
         return start, end
 
-    @property
-    def coset_vectors(self):
-        return  self._coset_offsets[:]
-
-    def coset_vector(self, coset: int) -> np.array:
-        try:
-            return self._coset_offsets[coset]
-        except:
-            pass
-
 
 class Lattice:
     """
-    The general "LatticeTensor" factory. Basically, this holds all the important information about the
-    point structure of the Lattice. LatticeTensors are instances of multi-dimensional sequences, but they
+    The general "LatticeTensor" factory. Basically, this holds all the
+    important information about the point structure of any Lattice.
+    LatticeTensors are instances of multi-dimensional sequences, but they
     store values only within a bounded region (and on an integer lattice).
+
+    An instance of this class /creates/ lattice tensors from a collection
+    of tensors (and possibly shifts, but if no shifts are spllied, then
+    it is assumed that the default coset structure (all positive) is used)
     """
 
     def __init__(self,
@@ -311,11 +397,16 @@ class Lattice:
         """
         Instantiate the LatticeTensor factory.
 
-        :param input_lattice: Either a lattice name (i.e. quincunx, qc, bcc etc..) or a list of coset vectors.
-        :param scale: If input lattice is a list of coset vectors, then this should be an n-dimensional integer vector
-                      specifying the scale of each coset.
-        :param tensor_backend: The type of tensor that backs this tensor created from this factory. This will mostly be
-                                torch.Tensor, but can be any torch._tensor type.
+        :param input_lattice: Either a lattice name (i.e. quincunx, qc, bcc
+                    etc..) or a list of coset vectors.
+
+        :param scale: If input lattice is a list of coset vectors, then this
+                    should be an n-dimensional integer vector specifying the
+                    scale of each coset.
+
+        :param tensor_backend: The type of tensor that backs this tensor
+                    created from this factory. This will mostly be torch.Tensor,
+                    but can be any torch._tensor type.
         """
         coset = input_lattice
         if isinstance(input_lattice, str):
@@ -335,7 +426,6 @@ class Lattice:
 
         # TODO: Change this to np.array
         if any([not isinstance(_, (np.ndarray, np.generic))  for _ in coset]):
-            pass
             raise ValueError(f"The input 'coset' should be a non-empty list of np.array")
 
         if any([_.size != coset[0].size for _ in coset]):
@@ -346,7 +436,7 @@ class Lattice:
         self._coset_scale = scale
 
         canonical_offsets = [_ % np.abs(scale) for _ in coset]
-        # TODO: change to np.array(, dtype='int')
+
         self._coset_vectors = sorted(canonical_offsets,
                                      key=lambda x: sum([abs(_.item()) for _ in x[:]])
             )
@@ -368,8 +458,6 @@ class Lattice:
         return len(self._coset_vectors)
 
     def coset_index(self, pt: Union[Tuple[int], List[int], np.array]) -> Union[int, None]:
-        # if isinstance(pt, np.array):
-        #     assert pt.dtype ==
         return self.cartesian_index(pt)[0]
 
     def cartesian_index(self, pt: Union[Tuple[int], List[int], np.array]):
@@ -382,22 +470,15 @@ class Lattice:
         return None, None
 
     def coset_offset(self, idx):
-        # TODO: change to np.array(, dtype='int')
         if 0 > idx <= self.coset_count:
             raise ValueError('Invalid coset offset index!')
         return self._coset_vectors[idx].astype('int')
 
     def cartesian_to_lattice(self, pt, coset_index):
-
         return (self._coset_scale * np.array(pt, dtype='int') + self._coset_vectors[coset_index]).astype('int')
 
     def __cmp__(self, other):
-        # TODO: Check if tensors implement a cmp method, then implement this
         raise NotImplementedError()
-
-    def _validate_coset_vectors(self, vectors):
-        #
-        pass
 
     def __eq__(self, other):
         eq = all([np.abs(a - b).sum() < 1e-5 for a,b in zip(self.coset_vectors, other.coset_vectors)])

@@ -37,6 +37,20 @@ def create_smoothing_qc(chan_in):
         low_pass_qc
     )
 
+def create_smoothing_qc2(chan_in):
+    qc = Lattice('qc')
+
+    stencil = Stencil([
+        (1,1),(3,1),(2,2),(1,3),(3,3),(0,2),(2,0),(4,2),(2,4)
+    ], qc, center=(2,2))
+    low_pass_qc = LatticeConvolution(qc, chan_in, chan_in, stencil, groups=1, bias=False)
+
+    return nn.Sequential(
+        LatticePad(qc, stencil),
+        low_pass_qc
+    )
+
+
 def create_smoothing_cp(chan_in):
     cp = Lattice('cp')
 
@@ -110,6 +124,31 @@ class LatticeConstruction(unittest.TestCase):
             tuple(lt.coset(1).shape),
             (1,3,8,8)
         )
+
+
+    def test_smallest_conv(self):
+        qc = Lattice("qc")
+
+        D = np.array([[1, 1], [1, -1]], dtype='int')
+
+        downsample_lattice(qc, D)
+
+        a0 = torch.rand(1, 3, 1, 1)
+        a1 = torch.rand(1, 3, 1, 1)
+
+        lta = qc({
+            (0, 0): a0,
+            (1, 1): a1
+        })
+
+        sf = create_smoothing_qc2(3)
+
+        ldl = LatticeDownsample(qc, D)
+        self.assertNotEqual(qc, ldl.down_lattice)
+
+        lto = sf(lta)
+        lt_down = ldl(lto)
+        pass
 
 
     def test_upsample_layer(self):

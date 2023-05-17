@@ -16,8 +16,5 @@ lt = qc({
 # You can perform arithmetic as usual
 lt_res = lt + lt
 
-# You can get the individual cosets via the coset
+# You can get the individual cosets via the coset method
 print(lt_res.coset(0))
-
-#
-

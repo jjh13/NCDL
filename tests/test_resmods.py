@@ -380,7 +380,3 @@ class LatticeConstruction(unittest.TestCase):
         self.assertEqual(tuple(lt.shift_constants(0, 1)), (0, 0))
         self.assertEqual(tuple(lt.shift_constants(1, 0)), (-1, -1))
         self.assertEqual(tuple(lt.shift_constants(1, 1)), (0, 0))
-
-
-        print(lt.delta(0))
-        print(lt.delta(1))
