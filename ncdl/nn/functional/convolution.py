@@ -74,5 +74,4 @@ def _calc_shape_out(lt: LatticeTensor,
 def _conv_coset(_lattice, data, weights, groups):
     assert _lattice.dimension in [1, 2, 3]
     convolution = {1: nn.functional.conv1d, 2: nn.functional.conv2d, 3: nn.functional.conv3d}
-
     return convolution[_lattice.dimension](data, weights, padding=0, groups=groups)

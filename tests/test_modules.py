@@ -4,7 +4,7 @@ from ncdl.lattice import Lattice
 import ncdl.nn as ncnn
 from ncdl.nn import *
 from ncdl.modules.resnet import QCCPResidualBlock, Resnet18
-from ncdl.modules.autoencoder import ConvBlock, DownBlock, UpBlock, InnerRecursiveNetwork, Unet
+from ncdl.modules.autoencoder import ConvBlock, DownBlock, UpBlock, InnerRecursiveNetwork, Unet, DoubleConv,Up, Down
 
 from torchvision.models.resnet import BasicBlock, conv3x3, conv1x1, resnet50
 from ncdl.util.stencil import Stencil
@@ -36,6 +36,26 @@ class LatticeConstruction(unittest.TestCase):
 
             cbcp(ltcp)
             cbqc(ltqc)
+
+    def test_double_conv(self):
+        lattice = Lattice("cp")
+        dc = nn.Sequential(
+            DoubleConv(lattice, 16, 16, 8),
+            Down(lattice, 16, 16, 4)
+            # DoubleConv(lattice, 16, 16, 8),
+            # Up(lattice, 16, 16, 4),
+        )
+        # up = Up(lattice, 16, 16, 4)
+
+        rg = torch.rand(1, 16, 128, 128, requires_grad=True)
+
+        output = dc(lattice(rg)) #, lattice(rg[:, :8,:,:]))
+        loss = (output.coset(0).sum()- 1)**2
+        loss.backward()
+
+        print(rg.grad)
+
+
 
     def test_down(self):
         lattice_cp = Lattice("cp")
@@ -103,3 +123,6 @@ class LatticeConstruction(unittest.TestCase):
         for config in ['unet_cp_std', 'unet_cp_dbl', 'unet_qc_dbl', 'unet_cp_grdl', 'unet_qc_grdl']:
             network = Unet(3, 1, config, residual=True)
             network(torch.rand(1, 3, 256, 256))
+
+    def test_ae_dissappearance(self):
+        from ncdl.modules.autoencoder import Unet

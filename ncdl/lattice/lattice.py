@@ -228,6 +228,9 @@ class LatticeTensor:
         if len(self._coset_offsets) != len(other._coset_offsets):
             raise ValueError("LatticeTensors must belong to the same lattice")
 
+        if len(self._coset_offsets) == 1:
+            return [0]
+
         c_a = sum(self._coset_offsets) / len(self._coset_offsets)
         c_b = sum(other._coset_offsets) / len(other._coset_offsets)
 
