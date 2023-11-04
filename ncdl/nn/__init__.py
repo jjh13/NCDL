@@ -8,3 +8,4 @@ from ncdl.nn.modules.groupnorm import LatticeGroupNorm
 from ncdl.nn.modules.resample import LatticeDownsample, LatticeUpsample
 from ncdl.nn.modules.lattice import LatticeUnwrap, LatticeWrap
 from ncdl.nn.modules.pad import LatticePad
+from ncdl.nn.modules.pooling import LatticeMaxPooling

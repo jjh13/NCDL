@@ -3,8 +3,7 @@ import torch
 from ncdl.lattice import Lattice
 import ncdl.nn as ncnn
 from ncdl.nn import *
-from ncdl.modules.resnet import QCCPResidualBlock, Resnet18
-from ncdl.modules.autoencoder import ConvBlock, DownBlock, UpBlock, InnerRecursiveNetwork, Unet, DoubleConv,Up, Down
+from ncdl.modules.autoencoder import ConvBlock, DownBlock, UpBlock, InnerRecursiveNetwork, AE_Unet, DoubleConv,Up, Down
 
 from torchvision.models.resnet import BasicBlock, conv3x3, conv1x1, resnet50
 from ncdl.util.stencil import Stencil
@@ -28,8 +27,8 @@ class LatticeConstruction(unittest.TestCase):
 
         for block_type in ['basic', 'residual', 'unet']:
             print(block_type)
-            cbcp = ConvBlock(lattice_cp, 128, 256, block_type, 'bn')
-            cbqc = ConvBlock(lattice_qc, 128, 256, block_type, 'bn')
+            cbcp = ConvBlock(lattice_cp, 128, 256, 128, block_type, 'bn')
+            cbqc = ConvBlock(lattice_qc, 128, 256, 128, block_type, 'bn')
 
             ltcp = lattice_cp(torch.rand(1, 128, 64, 64))
             ltqc = lattice_qc(torch.rand(1, 128, 64, 64), torch.rand(1, 128, 64, 64))
@@ -109,20 +108,20 @@ class LatticeConstruction(unittest.TestCase):
     def test_unet_autoencoder_structs(self):
 
         for config in ['ae_cp_std', 'ae_cp_dbl', 'ae_qc_dbl', 'ae_cp_dbl', 'ae_cp_grdl', 'ae_qc_grdl']:
-            network = Unet(3, 1, config)
+            network = AE_Unet(3, 1, config)
             network(torch.rand(1, 3, 256, 256))
 
 
     def test_unet_structs(self):
         for config in ['unet_cp_std', 'unet_cp_dbl', 'unet_qc_dbl', 'unet_cp_grdl', 'unet_qc_grdl']:
-            network = Unet(3, 1, config)
+            network = AE_Unet(3, 1, config)
             network(torch.rand(1, 3, 256, 256))
 
 
     def test_unet_structs_res(self):
         for config in ['unet_cp_std', 'unet_cp_dbl', 'unet_qc_dbl', 'unet_cp_grdl', 'unet_qc_grdl']:
-            network = Unet(3, 1, config, residual=True)
+            network = AE_Unet(3, 1, config, residual=True)
             network(torch.rand(1, 3, 256, 256))
 
     def test_ae_dissappearance(self):
-        from ncdl.modules.autoencoder import Unet
+        from ncdl.modules.autoencoder import AE_Unet

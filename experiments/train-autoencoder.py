@@ -8,7 +8,7 @@ import torch.nn.functional as F
 import torch
 import random
 from multiprocessing import freeze_support
-from ncdl.modules.autoencoder import Unet, UNetSane
+from ncdl.modules.autoencoder import AE_Unet
 import torchmetrics
 
 
@@ -29,13 +29,11 @@ class AutoencoderModule(pl.LightningModule):
         super().__init__()
 
         assert loss in ['l1', 'l2', 'bce']
-        if variant == 'sane':
-            self.model = UNetSane(3,1)
-        else:
-            self.model = Unet(3,
-                              3,
-                              variant,
-                              residual=residual)
+
+        self.model = AE_Unet(3,
+                             3,
+                             variant,
+                             residual=residual)
         self.loss = loss
         self.learning_rate = learning_rate
         self.bce_crit = nn.BCELoss(size_average=True)
@@ -63,8 +61,6 @@ class AutoencoderModule(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         input = batch
 
-        # print(input.max())
-
         pred = self.model(input, iter=self.global_step)
 
         if self.loss == 'l2':
@@ -82,13 +78,7 @@ class AutoencoderModule(pl.LightningModule):
         )
 
     def on_before_optimizer_step(self, optimizer, optimizer_idx):
-        # example to inspect gradient information in tensorboard
-        if self.trainer.global_step % 25 == 0:  # don't make the tf file huge
-            pass
-            # for k, v in self.named_parameters():
-            #     self.logger.experiment.add_histogram(
-            #         tag=k, values=v.grad, global_step=self.trainer.global_step
-            #     )
+        pass
 
 if __name__ == '__main__':
     freeze_support()

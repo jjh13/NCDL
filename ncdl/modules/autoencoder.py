@@ -459,7 +459,7 @@ class InnerRecursiveNetwork(nn.Module):
         return lt_down
 
 
-class Unet(nn.Module):
+class AE_Unet(nn.Module):
     def __init__(self, channels_in, channels_out, config, residual: bool = False):
         super().__init__()
         lattice_cp = ncdl.Lattice('cp')

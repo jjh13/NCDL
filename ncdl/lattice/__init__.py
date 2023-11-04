@@ -7,5 +7,5 @@ from ncdl.lattice.lattice import Lattice, \
 
 
 __all__ = [
-    Lattice, LatticeTensor, DoubleLattice, FloatLattice, HalfLattice, IntLattice
+    "Lattice", "LatticeTensor", "DoubleLattice", "FloatLattice", "HalfLattice", "IntLattice"
 ]

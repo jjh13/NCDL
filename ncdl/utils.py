@@ -58,10 +58,11 @@ def find_coset_vectors(L):
             v = np.array([0 if _ != dim else c for _ in range(s)])
             if is_lattice_site(L, v):
                 D[dim, dim] = c
-                bounds += [(0, c - 1)]
+                bounds += [(0, c)]
                 break
 
     v_list = []
+    bounds = [range(*_) for _ in bounds]
     for pt in product(*bounds):
         if all([_ == 0 for _ in pt]):
             continue

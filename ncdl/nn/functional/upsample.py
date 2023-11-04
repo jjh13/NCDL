@@ -73,7 +73,7 @@ def upsample(lt: LatticeTensor, s_matrix: torch.IntTensor):
     # Next, we copy all of the data to the new arrays
     for idx in range(lt.parent.coset_count):
         # Get our offset and data
-        offset = lt.coset_vector(idx) * k
+        offset = lt.coset_vectors[idx] * k
         data = lt.coset(idx)
         injected = False
 
@@ -112,7 +112,7 @@ def upsample(lt: LatticeTensor, s_matrix: torch.IntTensor):
     cosets = [(v//gcd, data) for v,data in cosets]
 
     # Finally construct the lattice object
-    sl = Lattice([np.array([c//gcd for c in v], dtype='int') for v, _ in cosets], D.diagonal()/gcd)
+    sl = Lattice([np.array([c for c in v], dtype='int') for v, _ in cosets], D.diagonal()/gcd)
 
     return sl(
         {

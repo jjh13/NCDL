@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ncdl.Lattice &mdash; NCDL 0.0.1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="ncdl.Lattice.dimension" href="ncdl.Lattice.dimension.html" />
+    <link rel="prev" title="Lattices" href="../lattice.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NCDL
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../lattice.html">Lattices</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../lattice.html#creating-lattice-tensor-factories">Creating Lattice Tensor Factories</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../lattice.html#lattice-class">Lattice Class</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">ncdl.Lattice</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#ncdl.Lattice"><code class="docutils literal notranslate"><span class="pre">Lattice</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncdl.Lattice.dimension.html">ncdl.Lattice.dimension</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../lattice_tensor.html">Lattice Tensors</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../stencil.html">Stencils</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">Layer API</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../functional.html">Functional API</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NCDL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../lattice.html">Lattices</a></li>
+      <li class="breadcrumb-item active">ncdl.Lattice</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/ncdl.Lattice.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="ncdl-lattice">
+<h1>ncdl.Lattice<a class="headerlink" href="#ncdl-lattice" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="ncdl.Lattice">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ncdl.</span></span><span class="sig-name descname"><span class="pre">Lattice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_lattice:</span> <span class="pre">~typing.List</span> <span class="pre">|</span> <span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale:</span> <span class="pre">~numpy.array</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tensor_backend:</span> <span class="pre">&lt;module</span> <span class="pre">'torch._tensor'</span> <span class="pre">from</span> <span class="pre">'/Users/joshuahoracsek/miniconda3/envs/ncdl/lib/python3.8/site-packages/torch/_tensor.py'&gt;</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'torch.Tensor'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ncdl.Lattice" title="Permalink to this definition"></a></dt>
+<dd><p>The general “LatticeTensor” factory. Basically, this holds all the
+important information about the point structure of any Lattice.
+LatticeTensors are instances of multi-dimensional sequences, but they
+store values only within a bounded region (and on an integer lattice).</p>
+<p>An instance of this class /creates/ lattice tensors from a collection
+of tensors (and possibly shifts, but if no shifts are spllied, then
+it is assumed that the default coset structure (all positive) is used)</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ncdl.Lattice.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_lattice:</span> <span class="pre">~typing.List</span> <span class="pre">|</span> <span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale:</span> <span class="pre">~numpy.array</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tensor_backend:</span> <span class="pre">&lt;module</span> <span class="pre">'torch._tensor'</span> <span class="pre">from</span> <span class="pre">'/Users/joshuahoracsek/miniconda3/envs/ncdl/lib/python3.8/site-packages/torch/_tensor.py'&gt;</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'torch.Tensor'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ncdl.Lattice.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Instantiate the LatticeTensor factory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_lattice</strong> – Either a lattice name (i.e. quincunx, qc, bcc
+etc..) or a list of coset vectors.</p></li>
+<li><p><strong>scale</strong> – If input lattice is a list of coset vectors, then this
+should be an n-dimensional integer vector specifying the
+scale of each coset.</p></li>
+<li><p><strong>tensor_backend</strong> – The type of tensor that backs this tensor
+created from this factory. This will mostly be torch.Tensor,
+but can be any torch._tensor type.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ncdl.Lattice.__init__" title="ncdl.Lattice.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(input_lattice[, scale, tensor_backend])</p></td>
+<td><p>Instantiate the LatticeTensor factory.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cartesian_index</span></code>(pt)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cartesian_to_lattice</span></code>(pt, coset_index)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">coset_index</span></code>(pt)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">coset_offset</span></code>(idx)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">kappa</span></code>(i, j[, additive])</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">coset_count</span></code></p></td>
+<td><p>The total number of cosets for the lattice</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">coset_scale</span></code></p></td>
+<td><p>The coset scale $D$ of the lattice</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">coset_vectors</span></code></p></td>
+<td><p>The coset vectors $v_i mod D$ of the current lattice.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="ncdl.Lattice.dimension.html#ncdl.Lattice.dimension" title="ncdl.Lattice.dimension"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dimension</span></code></a></p></td>
+<td><p>The dimension of the lattice.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../lattice.html" class="btn btn-neutral float-left" title="Lattices" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ncdl.Lattice.dimension.html" class="btn btn-neutral float-right" title="ncdl.Lattice.dimension" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Joshua Horacsek.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

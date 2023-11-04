@@ -4,7 +4,7 @@ from ncdl.lattice import Lattice
 from ncdl.nn.functional.norm import coset_moments, instance_norm, batch_norm, group_norm
 from ncdl.nn import LatticeBatchNorm, LatticeInstanceNorm, LatticeGroupNorm
 
-from dataset.duts import SODLoader
+# from dataset.duts import SODLoader
 
 class LatticeNorm(unittest.TestCase):
     def setUp(self):
@@ -211,13 +211,3 @@ class LatticeNorm(unittest.TestCase):
 
         self.assertTrue((ltn.coset(0) - xn[:,:,:,:2]).pow(2).sum() < 1e-5)
         self.assertTrue((ltn.coset(1) - xn[:,:,:,2:]).pow(2).sum() < 1e-5)
-
-    def test_loader(self):
-        import torchvision
-
-        train_loader = SODLoader(
-            '/mnt/home/john/datasets/DUTS-TR/', 'train', augment_data=False, target_size=256, repeat=2)
-
-        data = train_loader[0]
-        torchvision.transforms.functional.to_pil_image(data[0]).save('test.png')
-

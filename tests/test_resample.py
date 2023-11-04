@@ -92,6 +92,23 @@ class LatticeConstruction(unittest.TestCase):
         lt = cl({(0,0):a0})
         print(lt)
 
+    def test_downsample_qc2(self):
+        qc = Lattice("qc")
+
+        D = np.array([[2, 0], [0, 2]], dtype='int')
+
+        blue_coset = torch.rand(4, 3, 16, 16)
+        orange_coset = torch.rand(4, 3, 16, 16)
+
+        lt = qc({
+            (0, 0): blue_coset,
+            (1, 1): orange_coset
+        })
+
+        x = downsample(lt, D)
+
+
+
 
     def test_downsample_layer(self):
         qc = Lattice("qc")

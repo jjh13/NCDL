@@ -58,7 +58,7 @@ def lattice_conv(lt: LatticeTensor,
 def _calc_shape_out(lt: LatticeTensor,
                     coset_index: int,
                     stencil: "Stencil"):
-    start = lt.coset_vector(coset_index)
+    start = lt.coset_vectors[coset_index]
     bound = lt.lattice_bounds()[2:]
     stencil_bdry = stencil.stencil_boundaries(coset_index=None, canonical=True, cartesian=False)[-1]
 

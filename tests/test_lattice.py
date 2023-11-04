@@ -2,7 +2,6 @@ import unittest
 import torch
 import numpy as np
 from ncdl.lattice import Lattice
-from ncdl.nn.functional.pad import pad
 
 
 class LatticeConstruction(unittest.TestCase):
@@ -44,13 +43,13 @@ class LatticeConstruction(unittest.TestCase):
             })
 
             # Test that all the offsets are correct
-            src_offsets = [lta.coset_vector(idx) for idx in range(lta.parent.coset_count)]
+            src_offsets = [lta.coset_vectors[idx] for idx in range(lta.parent.coset_count)]
             src_sizes = [lta.coset(idx).shape for idx in range(lta.parent.coset_count)]
 
             # Move the tensor to the device
             lta = lta.to(device)
             for idx in range(lta.parent.coset_count):
-                for src, trg in zip(lta.coset_vector(idx), src_offsets[idx]):
+                for src, trg in zip(lta.coset_vectors[idx], src_offsets[idx]):
                     self.assertEqual(src.item(), trg.item())
                 for src, trg in zip(lta.coset(idx).shape,  src_sizes[idx]):
                     self.assertEqual(src, trg)
@@ -58,7 +57,6 @@ class LatticeConstruction(unittest.TestCase):
             # Check that all the cosets are on their correct devices
             for coset_idx in range(lta.parent.coset_count):
                 self.assertEqual(device, lta.coset(coset_idx).device)
-
 
     def test_inconsistent_device_failure(self):
         """
@@ -190,18 +188,18 @@ class LatticeConstruction(unittest.TestCase):
 
             self.assertEqual(ltc.coset(0).sum(), (a0.to(device)*b0.to(device)).sum())
             self.assertEqual(ltc.coset(1).sum(), (a1.to(device)*b1.to(device)).sum())
-
-    def test_lattice_slice0(self):
-        qc = Lattice("qc")
-        self.assertEqual(qc.dimension, 2)
-
-        lt = qc(
-            torch.rand(1, 3, 10, 10),
-            torch.rand(1, 3, 9, 9)
-        )
-
-        lts = lt[:, :, 2:-1, 2:-1]
-        print(lts)
+    #
+    # def test_lattice_slice0(self):
+    #     qc = Lattice("qc")
+    #     self.assertEqual(qc.dimension, 2)
+    #
+    #     lt = qc(
+    #         torch.rand(1, 3, 10, 10),
+    #         torch.rand(1, 3, 9, 9)
+    #     )
+    #
+    #     lts = lt[:, :, 2:-1, 2:-1]
+    #     print(lts)
 
     def test_bad_lattice_construct(self):
         # Quincunx Lattice

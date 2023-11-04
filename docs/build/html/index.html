@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NCDL Docs &mdash; NCDL 0.0.1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Lattices" href="lattice.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            NCDL
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="lattice.html">Lattices</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="lattice_tensor.html">Lattice Tensors</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="stencil.html">Stencils</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Layer API</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="functional.html">Functional API</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">NCDL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">NCDL Docs</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="ncdl-docs">
+<h1>NCDL Docs<a class="headerlink" href="#ncdl-docs" title="Permalink to this heading"></a></h1>
+<p>NCDL is a light-weight package over top of PyTorch that adds the
+ability to work on (regular) non-Cartesian grids. If you’re not
+familiar with the term ‘non-Cartesian grid’, a good introductory
+example is the Hexagonal grid. In 3-dimensions, further
+examples are the FCC, BCC, FCO etc… (and even more in higher
+dimensions).</p>
+<section id="philosphy">
+<h2>Philosphy<a class="headerlink" href="#philosphy" title="Permalink to this heading"></a></h2>
+<p>The general philosophy for NCDL is to remain as generic and as
+PyTorch-onic as possible. That is, we try to adhere to the general structure and
+abstractions that PyTorch already uses. We perfer generality
+over performance. As time progresses, we hope to improve performance
+and get to speed parity with equivatent Cartesian approaches.</p>
+</section>
+<section id="getting-started">
+<h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading"></a></h2>
+<p>Refer to the <cite>README.md</cite> in the root of the github repository. You
+will need /some/ version of PyTorch (I have not done extensive
+testing regarding which version work, but I know in the range
+<cite>[1.8.1, 2.0.0]</cite> is working for me.</p>
+</section>
+<section id="key-concepts">
+<h2>Key Concepts<a class="headerlink" href="#key-concepts" title="Permalink to this heading"></a></h2>
+<p><strong>Lattice</strong>:
+A Lattice is a discrete point structure that forms a group. Think of
+it like this, imagine an image with square pixels. The “lattice” is
+the underlying point structure of the center of those pixels. Lattices
+in NCDL are factory like objects, they describe the lattice geometry,
+but do not hold data. They construct LatticeTensors, which hold
+data (and keep track of boundary information).</p>
+<p><em>Further Information</em>:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="lattice.html">Lattices</a></li>
+</ul>
+</div>
+<p><strong>LatticeTensor</strong>:
+Lattice tensors are the de-facto standard datastructure in NCDL. All
+operations in NCDL operate on lattice tensor.</p>
+<p><em>Further Information</em>:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="lattice_tensor.html">Lattice Tensors</a></li>
+</ul>
+</div>
+<p><strong>Stencil</strong>:
+Stencils simply record the geometry of a filter to be used with
+convolution and/or max pooling.</p>
+<p><em>Further Information</em>:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="stencil.html">Stencils</a></li>
+</ul>
+</div>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
+<p>To make the ideas in this documentation more concrete, we provide a small set
+of examples. These come in the form of Jupyter notebooks, you can find these
+in the <cite>examples</cite> directory of the base github repository.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Constructing Lattices and Lattice Tensors</p></li>
+<li><p>Lattice Tensor Arithmetic</p></li>
+<li><p>Upsampling and Downsampling</p></li>
+<li><p>Constructing Stencils</p></li>
+<li><p>Using Stencils</p></li>
+<li><p>Using the Layer API</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="layer-api">
+<h2>Layer API<a class="headerlink" href="#layer-api" title="Permalink to this heading"></a></h2>
+<p>In the same vein as PyTorch, we provide a “layer” abstraction for modules.
+These are intended to be used in the same way as base PyTorch layers, with
+the exception that these take lattice tensors instead of base tensors.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Layer API</a></li>
+</ul>
+</div>
+</section>
+<section id="functional-api">
+<h2>Functional API<a class="headerlink" href="#functional-api" title="Permalink to this heading"></a></h2>
+<p>The functional API contains the base implementations for the Layer API.
+For many cases, you very likely want to use the Layer API.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="functional.html">Functional API</a></li>
+</ul>
+</div>
+</section>
+<section id="id1">
+<h2>Examples<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h2>
+<p>Examples in the form of Jupyter notebooks are in the examples folder in the
+base of the github repository. These cover the key concepts in this
+documentation. Please ensure that you have installed NCDL in your
+local environment before running these.</p>
+</section>
+<section id="full-api-reference">
+<h2>Full API Reference<a class="headerlink" href="#full-api-reference" title="Permalink to this heading"></a></h2>
+<p>The full API reference is here</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+</ul>
+</div>
+</section>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading"></a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="lattice.html" class="btn btn-neutral float-right" title="Lattices" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Joshua Horacsek.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

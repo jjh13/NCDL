@@ -29,7 +29,7 @@ def downsample_lattice(lattice: Lattice, s_matrix: np.array):
 
 def downsample(lt: LatticeTensor, s_matrix: torch.IntTensor):
 
-    # Todo: Use the outputs from downsample lattice here -- don't compute D,c ever time downsample is called!
+    # Todo: Use the outputs from downsample lattice here -- don't compute D,c every time downsample is called!
     B = np.stack(lt.parent.coset_vectors, axis=-1)
     B = np.concatenate([B, np.diag(lt.parent.coset_scale)], axis=-1)
     L, U = column_style_hermite_normal_form(B)
@@ -49,8 +49,7 @@ def downsample(lt: LatticeTensor, s_matrix: torch.IntTensor):
 
             # Since we subsampled the lattice M, we know that MS' basis is in
             # the original lattice
-            coset_index = lt.parent.coset_index(v)
-            vector = lt.parent.coset_offset(coset_index)
+            vector = v
 
             # Now we shift it until we find the "left-most" (according to each dimension)
             # coordinate for this coset
@@ -75,6 +74,6 @@ def downsample(lt: LatticeTensor, s_matrix: torch.IntTensor):
 
     return sl(
         {
-            v: data for v, data in coset_data
+            tuple([c/gcd for c in v]): data for v, data in coset_data
         }
     )

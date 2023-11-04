@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Layer API &mdash; NCDL 0.0.1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="ncdl.nn.LatticeWrap" href="_autosummary/ncdl.nn.LatticeWrap.html" />
+    <link rel="prev" title="ncdl.Stencil" href="_autosummary/ncdl.Stencil.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            NCDL
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="lattice.html">Lattices</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="lattice_tensor.html">Lattice Tensors</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="stencil.html">Stencils</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Layer API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#utility-layers">Utility Layers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.LatticeWrap.html">ncdl.nn.LatticeWrap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.LatticeUnwrap.html">ncdl.nn.LatticeUnwrap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.LatticePad.html">ncdl.nn.LatticePad</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#convolution-layer">Convolution Layer</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.LatticeConvolution.html">ncdl.nn.LatticeConvolution</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#pooling-layers">Pooling Layers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.LatticeMaxPooling.html">ncdl.nn.LatticeMaxPooling</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#resampling-layers">Resampling Layers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.LatticeDownsample.html">ncdl.nn.LatticeDownsample</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.LatticeUpsample.html">ncdl.nn.LatticeUpsample</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#activation-layers">Activation Layers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.ReLU.html">ncdl.nn.ReLU</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.ReLU6.html">ncdl.nn.ReLU6</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.RReLU.html">ncdl.nn.RReLU</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.PReLU.html">ncdl.nn.PReLU</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.LeakyReLU.html">ncdl.nn.LeakyReLU</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.Hardtanh.html">ncdl.nn.Hardtanh</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.Tanh.html">ncdl.nn.Tanh</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.Tanhshrink.html">ncdl.nn.Tanhshrink</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.Threshold.html">ncdl.nn.Threshold</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.Softmax.html">ncdl.nn.Softmax</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.Softmin.html">ncdl.nn.Softmin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.Softsign.html">ncdl.nn.Softsign</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.Softplus.html">ncdl.nn.Softplus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.SELU.html">ncdl.nn.SELU</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.Sigmoid.html">ncdl.nn.Sigmoid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.SiLU.html">ncdl.nn.SiLU</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.Softshrink.html">ncdl.nn.Softshrink</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.Mish.html">ncdl.nn.Mish</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.Hardswish.html">ncdl.nn.Hardswish</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.Hardshrink.html">ncdl.nn.Hardshrink</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.Hardsigmoid.html">ncdl.nn.Hardsigmoid</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#normalization-layers">Normalization Layers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.LatticeBatchNorm.html">ncdl.nn.LatticeBatchNorm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.LatticeGroupNorm.html">ncdl.nn.LatticeGroupNorm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/ncdl.nn.LatticeInstanceNorm.html">ncdl.nn.LatticeInstanceNorm</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="functional.html">Functional API</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">NCDL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Layer API</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/modules.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="layer-api">
+<h1>Layer API<a class="headerlink" href="#layer-api" title="Permalink to this heading"></a></h1>
+<p>We define some basic layers to mimic the workflows already present
+in PyTorch. These layers</p>
+<section id="utility-layers">
+<h2>Utility Layers<a class="headerlink" href="#utility-layers" title="Permalink to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.LatticeWrap.html#ncdl.nn.LatticeWrap" title="ncdl.nn.LatticeWrap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.LatticeWrap</span></code></a>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.LatticeUnwrap.html#ncdl.nn.LatticeUnwrap" title="ncdl.nn.LatticeUnwrap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.LatticeUnwrap</span></code></a>([coset_index])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.LatticePad.html#ncdl.nn.LatticePad" title="ncdl.nn.LatticePad"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.LatticePad</span></code></a>(lattice, stencil)</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="convolution-layer">
+<h2>Convolution Layer<a class="headerlink" href="#convolution-layer" title="Permalink to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.LatticeConvolution.html#ncdl.nn.LatticeConvolution" title="ncdl.nn.LatticeConvolution"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.LatticeConvolution</span></code></a>(lattice, ...[, ...])</p></td>
+<td><p>Implements the <a href="#id1"><span class="problematic" id="id2">``</span></a>convolution'' (technically, cross-correlation) operation for LatticeTensors. This interface is meant to be as similar as possible to nn.Conv2d. However, we don't support dilation and strided convolution. It's possible to do both of these, however the implementation is very intricate (we need to fuse both the downsampling and conv operations). Currently, simply use ncdl.nn.functional.downsample to get the downsample operation.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="pooling-layers">
+<h2>Pooling Layers<a class="headerlink" href="#pooling-layers" title="Permalink to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.LatticeMaxPooling.html#ncdl.nn.LatticeMaxPooling" title="ncdl.nn.LatticeMaxPooling"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.LatticeMaxPooling</span></code></a>()</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="resampling-layers">
+<h2>Resampling Layers<a class="headerlink" href="#resampling-layers" title="Permalink to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.LatticeDownsample.html#ncdl.nn.LatticeDownsample" title="ncdl.nn.LatticeDownsample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.LatticeDownsample</span></code></a>(lattice, ...)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.LatticeUpsample.html#ncdl.nn.LatticeUpsample" title="ncdl.nn.LatticeUpsample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.LatticeUpsample</span></code></a>(lattice, ...)</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="activation-layers">
+<h2>Activation Layers<a class="headerlink" href="#activation-layers" title="Permalink to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.ReLU.html#ncdl.nn.ReLU" title="ncdl.nn.ReLU"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.ReLU</span></code></a>([inplace])</p></td>
+<td><p>Applies the rectified linear unit function element-wise:</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.ReLU6.html#ncdl.nn.ReLU6" title="ncdl.nn.ReLU6"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.ReLU6</span></code></a>([inplace])</p></td>
+<td><p>Applies the element-wise function:</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.RReLU.html#ncdl.nn.RReLU" title="ncdl.nn.RReLU"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.RReLU</span></code></a>([lower, upper, inplace])</p></td>
+<td><p>Applies the randomized leaky rectified liner unit function, element-wise, as described in the paper:</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.PReLU.html#ncdl.nn.PReLU" title="ncdl.nn.PReLU"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.PReLU</span></code></a>([num_parameters, init, ...])</p></td>
+<td><p>Applies the element-wise function:</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.LeakyReLU.html#ncdl.nn.LeakyReLU" title="ncdl.nn.LeakyReLU"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.LeakyReLU</span></code></a>([negative_slope, inplace])</p></td>
+<td><p>Applies the element-wise function:</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.Hardtanh.html#ncdl.nn.Hardtanh" title="ncdl.nn.Hardtanh"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.Hardtanh</span></code></a>([min_val, max_val, ...])</p></td>
+<td><p>Applies the HardTanh function element-wise.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.Tanh.html#ncdl.nn.Tanh" title="ncdl.nn.Tanh"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.Tanh</span></code></a>()</p></td>
+<td><p>Applies the Hyperbolic Tangent (Tanh) function element-wise.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.Tanhshrink.html#ncdl.nn.Tanhshrink" title="ncdl.nn.Tanhshrink"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.Tanhshrink</span></code></a>()</p></td>
+<td><p>Applies the element-wise function:</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.Threshold.html#ncdl.nn.Threshold" title="ncdl.nn.Threshold"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.Threshold</span></code></a>(threshold, value[, inplace])</p></td>
+<td><p>Thresholds each element of the input Lattice Tensor.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.Softmax.html#ncdl.nn.Softmax" title="ncdl.nn.Softmax"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.Softmax</span></code></a>([dim])</p></td>
+<td><p>Applies the Softmax function to an n-dimensional input Tensor rescaling them so that the elements of the n-dimensional output Tensor lie in the range [0,1] and sum to 1.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.Softmin.html#ncdl.nn.Softmin" title="ncdl.nn.Softmin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.Softmin</span></code></a>([dim])</p></td>
+<td><p>Applies the Softmin function to an n-dimensional input Tensor rescaling them so that the elements of the n-dimensional output Tensor lie in the range <cite>[0, 1]</cite> and sum to 1.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.Softsign.html#ncdl.nn.Softsign" title="ncdl.nn.Softsign"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.Softsign</span></code></a>()</p></td>
+<td><p>Applies the element-wise function:</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.Softplus.html#ncdl.nn.Softplus" title="ncdl.nn.Softplus"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.Softplus</span></code></a>([beta, threshold])</p></td>
+<td><p>Applies the Softplus function <span class="math notranslate nohighlight">\(\text{Softplus}(x) = \frac{1}{\beta} * \log(1 + \exp(\beta * x))\)</span> element-wise.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.SELU.html#ncdl.nn.SELU" title="ncdl.nn.SELU"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.SELU</span></code></a>([inplace])</p></td>
+<td><p>Applied element-wise, as:</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.Sigmoid.html#ncdl.nn.Sigmoid" title="ncdl.nn.Sigmoid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.Sigmoid</span></code></a>()</p></td>
+<td><p>Applies the element-wise function:</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.SiLU.html#ncdl.nn.SiLU" title="ncdl.nn.SiLU"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.SiLU</span></code></a>([inplace])</p></td>
+<td><p>Applies the Sigmoid Linear Unit (SiLU) function, element-wise.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.Softshrink.html#ncdl.nn.Softshrink" title="ncdl.nn.Softshrink"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.Softshrink</span></code></a>([lambd])</p></td>
+<td><p>Applies the soft shrinkage function elementwise:</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.Mish.html#ncdl.nn.Mish" title="ncdl.nn.Mish"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.Mish</span></code></a>([inplace])</p></td>
+<td><p>Applies the Mish function, element-wise.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.Hardswish.html#ncdl.nn.Hardswish" title="ncdl.nn.Hardswish"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.Hardswish</span></code></a>([inplace])</p></td>
+<td><p>Applies the Hardswish function, element-wise, as described in the paper: <a class="reference external" href="https://arxiv.org/abs/1905.02244">Searching for MobileNetV3</a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.Hardshrink.html#ncdl.nn.Hardshrink" title="ncdl.nn.Hardshrink"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.Hardshrink</span></code></a>([lambd])</p></td>
+<td><p>Applies the Hard Shrinkage (Hardshrink) function element-wise.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.Hardsigmoid.html#ncdl.nn.Hardsigmoid" title="ncdl.nn.Hardsigmoid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.Hardsigmoid</span></code></a>([inplace])</p></td>
+<td><p>Applies the Hardsigmoid function element-wise.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="normalization-layers">
+<h2>Normalization Layers<a class="headerlink" href="#normalization-layers" title="Permalink to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.LatticeBatchNorm.html#ncdl.nn.LatticeBatchNorm" title="ncdl.nn.LatticeBatchNorm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.LatticeBatchNorm</span></code></a>(lattice, num_features)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.LatticeGroupNorm.html#ncdl.nn.LatticeGroupNorm" title="ncdl.nn.LatticeGroupNorm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.LatticeGroupNorm</span></code></a>(lattice, ...[, ...])</p></td>
+<td><p>Applies Group Normalization over a mini-batch of inputs as described in the paper <a class="reference external" href="https://arxiv.org/abs/1803.08494">Group Normalization</a> .. math::     y = frac{x - mathrm{E}[x]}{ sqrt{mathrm{Var}[x] + epsilon}} * gamma + beta The input channels are separated into <code class="xref py py-attr docutils literal notranslate"><span class="pre">num_groups</span></code> groups, each containing <code class="docutils literal notranslate"><span class="pre">num_channels</span> <span class="pre">/</span> <span class="pre">num_groups</span></code> channels. <code class="xref py py-attr docutils literal notranslate"><span class="pre">num_channels</span></code> must be divisible by <code class="xref py py-attr docutils literal notranslate"><span class="pre">num_groups</span></code>. The mean and standard-deviation are calculated separately over the each group. <span class="math notranslate nohighlight">\(\gamma\)</span> and <span class="math notranslate nohighlight">\(\beta\)</span> are learnable per-channel affine transform parameter vectors of size <code class="xref py py-attr docutils literal notranslate"><span class="pre">num_channels</span></code> if <code class="xref py py-attr docutils literal notranslate"><span class="pre">affine</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>. The standard-deviation is calculated via the biased estimator, equivalent to <cite>torch.var(input, unbiased=False)</cite>. This layer uses statistics computed from input data in both training and evaluation modes. :param num_groups: number of groups to separate the channels into :type num_groups: int :param num_channels: number of channels expected in input :type num_channels: int :param eps: a value added to the denominator for numerical stability. Default: 1e-5 :param affine: a boolean value that when set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, this module                has learnable per-channel affine parameters initialized to ones (for weights)                and zeros (for biases). Default: <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/ncdl.nn.LatticeInstanceNorm.html#ncdl.nn.LatticeInstanceNorm" title="ncdl.nn.LatticeInstanceNorm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncdl.nn.LatticeInstanceNorm</span></code></a>(lattice, ...[, ...])</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="_autosummary/ncdl.Stencil.html" class="btn btn-neutral float-left" title="ncdl.Stencil" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="_autosummary/ncdl.nn.LatticeWrap.html" class="btn btn-neutral float-right" title="ncdl.nn.LatticeWrap" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Joshua Horacsek.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

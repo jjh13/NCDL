@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ncdl.lattice.LatticeTensor &mdash; NCDL 0.0.1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NCDL
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../lattice.html">Lattices</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../lattice_tensor.html">Lattice Tensors</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../stencil.html">Stencils</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">Layer API</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../functional.html">Functional API</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NCDL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">ncdl.lattice.LatticeTensor</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/ncdl.lattice.LatticeTensor.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="ncdl-lattice-latticetensor">
+<h1>ncdl.lattice.LatticeTensor<a class="headerlink" href="#ncdl-lattice-latticetensor" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="ncdl.lattice.LatticeTensor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ncdl.lattice.</span></span><span class="sig-name descname"><span class="pre">LatticeTensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ncdl.lattice.LatticeTensor" title="ncdl.lattice.lattice.LatticeTensor"><span class="pre">LatticeTensor</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alt_cosets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ncdl.lattice.Lattice.html#ncdl.lattice.Lattice" title="ncdl.lattice.lattice.Lattice"><span class="pre">Lattice</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alt_offsets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">array</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ncdl.lattice.LatticeTensor" title="Permalink to this definition"></a></dt>
+<dd><p>A LatticeTensor container is the base data structure for processing data on
+non-Cartesian lattices. It extends the concept of the tensor to non-square
+grids. Note that this is a base class, it need not inherent form any
+PyTorch base clasee.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ncdl.lattice.LatticeTensor.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ncdl.lattice.LatticeTensor" title="ncdl.lattice.lattice.LatticeTensor"><span class="pre">LatticeTensor</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alt_cosets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ncdl.lattice.Lattice.html#ncdl.lattice.Lattice" title="ncdl.lattice.lattice.Lattice"><span class="pre">Lattice</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alt_offsets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">array</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ncdl.lattice.LatticeTensor.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Generally, an end-user should not be using this constructor. This
+constructor is meant to be used by by the Lattice factory.</p>
+<p>Note that this constructor is VERY bare-bones. It doesn’t enforce the
+ordering principle mentioned in the paper (the Lattice factory does
+that).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lt</strong> – An input “protoypical” lattice tensor. If all other params
+are None this will constructor will simply clone this data.
+Otherwise, this forms the base for the region (and
+therefore coset vectors) of the lattice tensor.</p></li>
+<li><p><strong>alt_cosets</strong> – When alt_cosets is specified, lt must be specified.
+this will clone the structure of lt, but directly use the
+data in the tensors specified in alt_cosets.</p></li>
+<li><p><strong>parent</strong> – When parent is specified, then this simply sets the
+parent of the resultant lattice tensor to the appropriate
+Lattice factory. If lt is specified, we will also check
+against that lattice tensor’s parent</p></li>
+<li><p><strong>alt_offsets</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ncdl.lattice.LatticeTensor.__init__" title="ncdl.lattice.LatticeTensor.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([lt, alt_cosets, parent, alt_offsets])</p></td>
+<td><p>Generally, an end-user should not be using this constructor.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="ncdl.lattice.LatticeTensor.clone.html#ncdl.lattice.LatticeTensor.clone" title="ncdl.lattice.LatticeTensor.clone"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clone</span></code></a>()</p></td>
+<td><p>Analog of tensor.clone(), returns a new LatticeTensor copy that is still part of the computational graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="ncdl.lattice.LatticeTensor.coset.html#ncdl.lattice.LatticeTensor.coset" title="ncdl.lattice.LatticeTensor.coset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coset</span></code></a>(coset)</p></td>
+<td><p>Returns the underlying tensor for a given coset index.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="ncdl.lattice.LatticeTensor.detach.html#ncdl.lattice.LatticeTensor.detach" title="ncdl.lattice.LatticeTensor.detach"><code class="xref py py-obj docutils literal notranslate"><span class="pre">detach</span></code></a>()</p></td>
+<td><p>Analog of tensor.detach(), returns a new LatticeTensor that is the same as the input, but detached from the computational graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_tensor</span></code>()</p></td>
+<td><p>Returns true if the current lattice tensor is a Cartesian lattice tensor.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">lattice_bounds</span></code>()</p></td>
+<td><p>Returns the inclusive boundary of the lattice tensor.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="ncdl.lattice.LatticeTensor.on_lattice.html#ncdl.lattice.LatticeTensor.on_lattice" title="ncdl.lattice.LatticeTensor.on_lattice"><code class="xref py py-obj docutils literal notranslate"><span class="pre">on_lattice</span></code></a>(p)</p></td>
+<td><p>Tests if a point, represented as an integer numpy array is on the given lattice.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">raw_coset_point_info</span></code>(lattice_site)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">shift_constants</span></code>(i, j[, deconv])</p></td>
+<td><p>This is the analogue of delta(i,j) in the paper.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to</span></code>(device)</p></td>
+<td><p>Moves the lattice tensor to an appropriate device.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">coset_vectors</span></code></p></td>
+<td><p>A list of all the coset vectors for this lattice tensor.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">device</span></code></p></td>
+<td><p>Returns the current device that the lattice tensor resides on.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Joshua Horacsek.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

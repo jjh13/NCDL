@@ -106,13 +106,19 @@ class LatticeTensor:
 
     def detach(self) -> "LatticeTensor":
         """
-        Analog of tensor.detach()
+        Analog of tensor.detach(), returns a new LatticeTensor that is the same
+        as the input, but detached from the computational graph.
+
+        :return: Detached lattice tensor.
         """
         return LatticeTensor(self, alt_cosets=[_.detach() for _ in self._cosets])
 
     def clone(self) -> "LatticeTensor":
         """
-        Analog of tensor.detach()
+        Analog of tensor.clone(), returns a new LatticeTensor copy that is
+        still part of the computational graph.
+
+        :return: Cloned lattice tensor.
         """
         return LatticeTensor(self, alt_cosets=[_.clone() for _ in self._cosets])
 
@@ -137,9 +143,12 @@ class LatticeTensor:
     @property
     def device(self) -> torch.device:
         """
-        Returns the current device that the lattice tensor resides upon.
+        Returns the current device that the lattice tensor resides on.
+
         Assumes that the lattice tensor is consistent (i.e. the tensors
         underlying the LT have not been erroneously moved)
+
+        :return: A torch device.
         """
         return self.coset(0).device
 
@@ -166,7 +175,8 @@ class LatticeTensor:
 
     def coset(self, coset: int) -> torch.Tensor:
         """
-        Returns the underlying tensor for a given coset index.
+        Returns the underlying tensor for a given coset index. Gradients are
+        tracked for these tensors.
 
         :return: A torch tensor on self.device
         """
@@ -175,17 +185,12 @@ class LatticeTensor:
         return self._cosets[coset]
 
     @property
-    def coset_vectors(self):
+    def coset_vectors(self) -> List[np.array]:
         """
-
+        A list of all the coset vectors for this lattice tensor. Equivalent to
+        the $v_^\mathcal{R}_i$ in the paper.
         """
         return self._coset_offsets[:]
-
-    def coset_vector(self, coset: int) -> np.array:
-        try:
-            return self._coset_offsets[coset]
-        except:
-            pass
 
     def lattice_bounds(self):
         """
@@ -222,11 +227,13 @@ class LatticeTensor:
             mins = [int(min(a, _)) for a, _ in zip(mm, mins)]
         return (0, batch_size-1), (0, channel_size-1), *list(zip(mins, maxs))
 
-    def on_lattice(self, p: np.array):
+    def on_lattice(self, p: np.array) -> bool:
         """
-        Tests if a point is on the given lattice
+        Tests if a point, represented as an integer numpy array is on the given
+        lattice.
 
         :param p: an integer numpy array with dimension s.
+        :return: True if the point is on a lattice, False otherwise.
         """
         b, c, *dim = self.lattice_bounds()
 
@@ -369,7 +376,7 @@ class LatticeTensor:
         coset = self.parent.coset_index(lattice_site)
         if coset is None:
             return None
-        return coset, (lattice_site - self.coset_vector(coset))//self.parent.coset_scale
+        return coset, (lattice_site - self.coset_vectors[coset])//self.parent.coset_scale
 
     @staticmethod
     def _project_axis_bounds(coset_vector, coset_scale, element_count, axis):
@@ -441,20 +448,35 @@ class Lattice:
                                      key=lambda x: sum([abs(_.item()) for _ in x[:]])
             )
 
+    def _validate_coset_vectors(self, vectors):
+        pass
+
     @property
     def coset_vectors(self):
+        """
+        The coset vectors $v_i mod D$ of the current lattice.
+        """
         return self._coset_vectors[:]
 
     @property
     def dimension(self) -> int:
+        """
+        The dimension of the lattice.
+        """
         return self._dimension
 
     @property
     def coset_scale(self) -> np.array:
+        """
+        The coset scale $D$ of the lattice
+        """
         return self._coset_scale
 
     @property
     def coset_count(self) -> int:
+        """
+        The total number of cosets for the lattice
+        """
         return len(self._coset_vectors)
 
     def coset_index(self, pt: Union[Tuple[int], List[int], np.array]) -> Union[int, None]:

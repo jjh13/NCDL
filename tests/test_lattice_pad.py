@@ -10,6 +10,7 @@ class LatticePaddingTests(unittest.TestCase):
         self.devices = [torch.device('cpu')]
         if torch.cuda.is_available():
             self.devices += [torch.device('cuda:0')]
+        # MPS is sorta broken, not sure why
         # elif torch.backends.mps.is_available():
         #     self.devices += [torch.device('mps:0')]
 
@@ -57,7 +58,6 @@ class LatticePaddingTests(unittest.TestCase):
             self.assertEqual(bounds[2], (0, 15))
             self.assertEqual(bounds[3], (0, 15))
             self.assertEqual(lt.device, device)
-
 
     def test_lattice_pad_qc(self):
         qc = Lattice("qc")
