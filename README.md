@@ -2,18 +2,22 @@
 
 ----
 
-### Review Version
-This is a review version with a few things stripped out.
-- Examples and documentation have been minimized, this is somewhat to 
-  increase anonymity.
+### Pre-release Version
+This is a pre-release version that includes most of what was in the paper, 
+some implementation details have been temporarily lost (due to merge conflicts)
+but should be back soon. A few things
 - Modules and experiments for further work have been remove (as such, 
-  some tests are broken and have been removed)
-- Mox pooling has been removed (it requires a separate build process
-  because we use a specialized kernel, which may complicate the process 
-  of running the code -- experiments in the paper don't need this anyway)
+  some tests are broken, most pass, still.)
+- Mox/atrous pooling is missing its cuda implementation.
+- The setup.py's requirement list is messed up, this is a small issue that 
+  will be fixed relatively quickly.
+  
+Changes are currently happening in master, but we'll eventually switch to a more 
+sane development schedule.
+
 
 ### Installing / Testing
-First ensure the requirements are installed, they're rahter minimal
+First ensure the requirements are installed, they're rather minimal
 ```
 pip install -r requirements.txt
 ```
@@ -28,12 +32,21 @@ pip install  -e .
 ```
 
 ### Examples
-Th
+Check our RTD page, ncdl.ai. there are some gaps, but
+the key functionality is documented, and there are relatively comprehensive 
+examples in the `examples` directory. Please take a look at those.
 
-See modules/autoencoder.py. It has a number of models defined. Some are 
+Documentation is in `docs/build/index.html`. It's worth looking at for some 
+clarity on what's currently available in NCDL. 
+
+[comment]: <> (NTS: Autosummary doesn't seem to be pulling the most recent docstrings
+try to fix this before the final revision)
+
+See `modules/autoencoder.py`. It has a number of models defined. Some are 
 successful experiments that didn't make it into the current version of the 
-paper.
+paper, some are less successful. That's a full worked neural network implemented
+with NCDL.
 
 ### Experiments
 Experiments are in the `experiments` folder. You will need pytorch lighting 1.8.1 
-to run them. The configs are in the `configs` folder
+to run them. The configs are in the `configs` folder (you'll also need the.
