@@ -1,6 +1,6 @@
 ﻿ncdl.LatticeTensor.detach
 =========================
 
-.. currentmodule:: ncdl.LatticeTensor
+.. currentmodule:: ncdl
 
-.. autodata:: detach
+.. automethod:: LatticeTensor.detach

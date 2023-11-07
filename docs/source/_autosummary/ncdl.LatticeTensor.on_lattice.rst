@@ -1,6 +1,6 @@
 ﻿ncdl.LatticeTensor.on\_lattice
 ==============================
 
-.. currentmodule:: ncdl.LatticeTensor
+.. currentmodule:: ncdl
 
-.. autodata:: on_lattice
+.. automethod:: LatticeTensor.on_lattice

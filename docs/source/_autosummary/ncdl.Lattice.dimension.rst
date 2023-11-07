@@ -1,6 +1,6 @@
 ﻿ncdl.Lattice.dimension
 ======================
 
-.. currentmodule:: ncdl.Lattice
+.. currentmodule:: ncdl
 
-.. autodata:: dimension
+.. autoproperty:: Lattice.dimension
