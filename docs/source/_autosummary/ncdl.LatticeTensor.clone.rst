@@ -1,6 +1,6 @@
 ﻿ncdl.LatticeTensor.clone
 ========================
 
-.. currentmodule:: ncdl
+.. currentmodule:: ncdl.LatticeTensor
 
-.. automethod:: LatticeTensor.clone
+.. autodata:: clone

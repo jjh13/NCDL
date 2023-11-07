@@ -1,6 +1,6 @@
 ﻿ncdl.LatticeTensor.coset
 ========================
 
-.. currentmodule:: ncdl
+.. currentmodule:: ncdl.LatticeTensor
 
-.. automethod:: LatticeTensor.coset
+.. autodata:: coset
