@@ -2,10 +2,10 @@
 
 NCDL Docs
 ================================
-NCDL is a light-weight package over top of PyTorch that adds the
-ability to work on (regular) non-Cartesian grids. If you're not
-familiar with the term 'non-Cartesian grid', a good introductory
-example is the Hexagonal grid. In 3-dimensions, further
+NCDL is a light-weight package implemented on top of PyTorch that
+adds the ability to work on (regular) non-Cartesian grids. If
+you're not familiar with the term 'non-Cartesian grid', a good
+introductory example is the Hexagonal grid. In 3-dimensions, further
 examples are the FCC, BCC, FCO etc... (and even more in higher
 dimensions).
 
@@ -20,10 +20,13 @@ and get to speed parity with equivatent Cartesian approaches.
 
 Getting Started
 ****************
-Refer to the `README.md` in the root of the github repository. You
-will need /some/ version of PyTorch (I have not done extensive
-testing regarding which version work, but I know in the range
-`[1.8.1, 2.0.0]` is working for me.
+Refer to the `README.md` in the root of the `github <https://github.com/jjh13/NCDL/>`_ repository. You
+will need a version of PyTorch >= 1.8.1; we prioritize support
+for the most recent versions of PyTorch. Once you have cloned the
+repository and installed the package, check out the example
+notebooks and refer back to this documentation when in doubt.
+If you run into any issues, please do not hesitate to open an issue on
+github.
 
 Key Concepts
 *************

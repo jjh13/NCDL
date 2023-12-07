@@ -38,6 +38,6 @@ setup(
     package_dir={"ncdl": "ncdl"},  # Optional
     packages=find_packages(where="."),  # Required
     python_requires=">=3.7, <4",
-    install_requires=["pywavelets", "hsnf", "numpy"],  # Optional
+    install_requires=["pywavelets", "hsnf>=0.3.15", "numpy"],  # Optional
 
 )
