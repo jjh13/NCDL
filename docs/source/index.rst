@@ -8,6 +8,12 @@ you're not familiar with the term 'non-Cartesian grid', a good
 introductory example is the Hexagonal grid. In 3-dimensions, further
 examples are the FCC, BCC, FCO etc... (and even more in higher
 dimensions).
+.. raw:: html
+
+    <iframe width="420" height="315"
+    src="https://www.youtube.com/embed/DSY1OLJwv7M">
+    </iframe>
+
 
 Philosphy
 *************
